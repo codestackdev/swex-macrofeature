@@ -1,0 +1,92 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{CCD6976C-2DD6-4BD6-B907-3BCBECFFD86D}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>CodeStack.SwEx.MacroFeature</RootNamespace>
+    <AssemblyName>CodeStack.SwEx.MacroFeature</AssemblyName>
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="CodeStack.SwEx.Common, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\thirdpty\CodeStack.SwEx.Common.dll</HintPath>
+    </Reference>
+    <Reference Include="SolidWorks.Interop.sldworks, Version=26.2.0.63, Culture=neutral, PublicKeyToken=7c4797c3e4eeac03, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <EmbedInteropTypes>False</EmbedInteropTypes>
+      <HintPath>..\thirdpty\SolidWorks.Interop.sldworks.dll</HintPath>
+    </Reference>
+    <Reference Include="SolidWorks.Interop.swconst, Version=26.2.0.63, Culture=neutral, PublicKeyToken=19f43e188e4269d8, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <EmbedInteropTypes>False</EmbedInteropTypes>
+      <HintPath>..\thirdpty\SolidWorks.Interop.swconst.dll</HintPath>
+    </Reference>
+    <Reference Include="SolidWorks.Interop.swpublished, Version=26.2.0.63, Culture=neutral, PublicKeyToken=89a97bdc5284e6d8, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <EmbedInteropTypes>False</EmbedInteropTypes>
+      <HintPath>..\thirdpty\SolidWorks.Interop.swpublished.dll</HintPath>
+    </Reference>
+    <Reference Include="SolidWorksTools">
+      <HintPath>..\thirdpty\SolidWorksTools.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Attributes\IconAttribute.cs" />
+    <Compile Include="Attributes\OptionsAttribute.cs" />
+    <Compile Include="Attributes\ParameterDimensionAttribute.cs" />
+    <Compile Include="Attributes\ParameterEditBodiesAttribute.cs" />
+    <Compile Include="Attributes\ParameterSelectionAttribute.cs" />
+    <Compile Include="Base\MacroFeatureRebuildBodyResult.cs" />
+    <Compile Include="Base\MacroFeatureRebuildPatternResult.cs" />
+    <Compile Include="Base\MacroFeatureRebuildResult.cs" />
+    <Compile Include="Base\MacroFeatureRebuldStatusResult.cs" />
+    <Compile Include="Extensions\FeatureManagerExtension.cs" />
+    <Compile Include="Helpers\SelectionGroup.cs" />
+    <Compile Include="Helpers\MacroFeatureParametersParser.cs" />
+    <Compile Include="Icons\HighResIcon.cs" />
+    <Compile Include="Icons\IMacroFeatureIcon.cs" />
+    <Compile Include="Icons\MacroFeatureIconInfo.cs" />
+    <Compile Include="Icons\MasterIcon.cs" />
+    <Compile Include="MacroFeatureEx.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>
