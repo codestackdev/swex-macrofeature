@@ -30,27 +30,23 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="CodeStack.SwEx.Common, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\thirdpty\CodeStack.SwEx.Common.dll</HintPath>
+    <Reference Include="CodeStack.SwEx.Common">
+      <HintPath>..\..\swex-common-dev\Base\bin\Debug\CodeStack.SwEx.Common.dll</HintPath>
     </Reference>
-    <Reference Include="SolidWorks.Interop.sldworks, Version=26.2.0.63, Culture=neutral, PublicKeyToken=7c4797c3e4eeac03, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
+    <Reference Include="SolidWorks.Interop.sldworks">
+      <HintPath>..\..\swex-common-dev\thirdpty\SolidWorks.Interop.sldworks.dll</HintPath>
       <EmbedInteropTypes>False</EmbedInteropTypes>
-      <HintPath>..\thirdpty\SolidWorks.Interop.sldworks.dll</HintPath>
     </Reference>
-    <Reference Include="SolidWorks.Interop.swconst, Version=26.2.0.63, Culture=neutral, PublicKeyToken=19f43e188e4269d8, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
+    <Reference Include="SolidWorks.Interop.swconst">
+      <HintPath>..\..\swex-common-dev\thirdpty\SolidWorks.Interop.swconst.dll</HintPath>
       <EmbedInteropTypes>False</EmbedInteropTypes>
-      <HintPath>..\thirdpty\SolidWorks.Interop.swconst.dll</HintPath>
     </Reference>
-    <Reference Include="SolidWorks.Interop.swpublished, Version=26.2.0.63, Culture=neutral, PublicKeyToken=89a97bdc5284e6d8, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
+    <Reference Include="SolidWorks.Interop.swpublished">
+      <HintPath>..\..\swex-common-dev\thirdpty\SolidWorks.Interop.swpublished.dll</HintPath>
       <EmbedInteropTypes>False</EmbedInteropTypes>
-      <HintPath>..\thirdpty\SolidWorks.Interop.swpublished.dll</HintPath>
     </Reference>
     <Reference Include="SolidWorksTools">
-      <HintPath>..\thirdpty\SolidWorksTools.dll</HintPath>
+      <HintPath>..\..\swex-common-dev\thirdpty\SolidWorksTools.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -67,15 +63,18 @@
     <Compile Include="Attributes\ParameterDimensionAttribute.cs" />
     <Compile Include="Attributes\ParameterEditBodiesAttribute.cs" />
     <Compile Include="Attributes\ParameterSelectionAttribute.cs" />
+    <Compile Include="Base\IMacroFeatureHandler.cs" />
     <Compile Include="Base\MacroFeatureRebuildBodyResult.cs" />
     <Compile Include="Base\MacroFeatureRebuildPatternResult.cs" />
     <Compile Include="Base\MacroFeatureRebuildResult.cs" />
     <Compile Include="Base\MacroFeatureRebuldStatusResult.cs" />
     <Compile Include="Extensions\FeatureManagerExtension.cs" />
+    <Compile Include="Helpers\MacroFeatureLifecycleManager.cs" />
+    <Compile Include="Helpers\MacroFeatureRegister.cs" />
     <Compile Include="Helpers\SelectionGroup.cs" />
     <Compile Include="Helpers\MacroFeatureParametersParser.cs" />
     <Compile Include="Icons\HighResIcon.cs" />
-    <Compile Include="Icons\IMacroFeatureIcon.cs" />
+    <Compile Include="Icons\MacroFeatureIcon.cs" />
     <Compile Include="Icons\MacroFeatureIconInfo.cs" />
     <Compile Include="Icons\MasterIcon.cs" />
     <Compile Include="MacroFeatureEx.cs" />

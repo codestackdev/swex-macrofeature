@@ -19,7 +19,7 @@ namespace CodeStack.SwEx.MacroFeature.Example
     }
 
     [ComVisible(true)]
-    [Icon(typeof(Resources), nameof(Resources.codestack))]
+    [Icon(typeof(Resources), nameof(Resources.codestack), "CodeStack\\MacroFeatureExample\\Icons")]
     public class MyMacroFeature : MacroFeatureEx<MyParams>
     {
     }

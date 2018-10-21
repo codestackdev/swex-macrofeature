@@ -14,29 +14,22 @@ using System.Text;
 
 namespace CodeStack.SwEx.MacroFeature.Icons
 {
-    internal class MasterIcon : IMacroFeatureIcon
+    internal class MasterIcon : MacroFeatureIcon
     {
-        internal MasterIcon(string baseName)
+        internal MasterIcon(string baseName) : base(baseName)
         {
-            BaseName = baseName;
         }
 
         internal Image Icon { get; set; }
-
-        public string BaseName
-        {
-            get;
-            private set;
-        }
-
-        public IEnumerable<IconSizeInfo> GetHighResolutionIconSizes()
+        
+        public override IEnumerable<IconSizeInfo> GetHighResolutionIconSizes()
         {
             yield return new IconSizeInfo(Icon, MacroFeatureIconInfo.SizeHighResSmall, BaseName);
             yield return new IconSizeInfo(Icon, MacroFeatureIconInfo.SizeHighResMedium, BaseName);
             yield return new IconSizeInfo(Icon, MacroFeatureIconInfo.SizeHighResLarge, BaseName);
         }
 
-        public IEnumerable<IconSizeInfo> GetIconSizes()
+        public override IEnumerable<IconSizeInfo> GetIconSizes()
         {
             yield return new IconSizeInfo(Icon, MacroFeatureIconInfo.Size, BaseName);
         }

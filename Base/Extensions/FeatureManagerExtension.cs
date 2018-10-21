@@ -77,7 +77,7 @@ namespace SolidWorks.Interop.sldworks
         static FeatureManagerExtension()
         {
             m_ParamsParser = new MacroFeatureParametersParser();
-            m_IconsConverter = new IconsConverter(System.Drawing.Color.White);
+            m_IconsConverter = new IconsConverter();
         }
 
         /// <summary>
@@ -117,8 +117,6 @@ namespace SolidWorks.Interop.sldworks
             IFeatureManager featMgr, object parameters)
             where TMacroFeature : MacroFeatureEx
         {
-            //MacroFeatureDimension[] dims = null;
-
             string[] paramNames;
             int[] paramTypes;
             string[] paramValues;
@@ -138,19 +136,14 @@ namespace SolidWorks.Interop.sldworks
             int[] dimTypes = null, double[] dimValues = null, object[] selection = null)
             where TMacroFeature : MacroFeatureEx
         {
-            string baseName = "";
             var options = swMacroFeatureOptions_e.swMacroFeatureByDefault;
 
             typeof(TMacroFeature).TryGetAttribute<OptionsAttribute>(a =>
             {
-                baseName = a.BaseName;
                 options = a.Flags;
             });
 
-            if (string.IsNullOrEmpty(baseName))
-            {
-                baseName = typeof(TMacroFeature).Name;
-            }
+            var baseName = MacroFeatureEx.GetBaseName(typeof(TMacroFeature));
 
             var progId = GetProgId<TMacroFeature>();
 
@@ -159,7 +152,6 @@ namespace SolidWorks.Interop.sldworks
                 throw new NullReferenceException("Prog id for macro feature cannot be extracted");
             }
 
-            //var icons = GetIcons<TMacroFeature>();
             var icons = MacroFeatureIconInfo.GetIcons(typeof(TMacroFeature), true);
 
             using (var selSet = new SelectionGroup(featMgr.Document.ISelectionManager))
@@ -192,51 +184,51 @@ namespace SolidWorks.Interop.sldworks
             return progId;
         }
 
-        private static string[] GetIcons<TMacroFeature>()
-            where TMacroFeature : MacroFeatureEx
-        {
-            IIcon regIcon = null;
-            IIcon highIcon = null;
-            IIcon suppIcon = null;
+        //private static string[] GetIcons<TMacroFeature>()
+        //    where TMacroFeature : MacroFeatureEx
+        //{
+        //    IIcon regIcon = null;
+        //    IIcon highIcon = null;
+        //    IIcon suppIcon = null;
 
-            typeof(TMacroFeature).TryGetAttribute<IconAttribute>(a =>
-            {
-                regIcon = a.Regular;
-                highIcon = a.Highlighted;
-                suppIcon = a.Suppressed;
-            });
+        //    typeof(TMacroFeature).TryGetAttribute<IconAttribute>(a =>
+        //    {
+        //        regIcon = a.Regular;
+        //        highIcon = a.Highlighted;
+        //        suppIcon = a.Suppressed;
+        //    });
 
-            if (regIcon == null)
-            {
-                //TODO: load default
-            }
+        //    if (regIcon == null)
+        //    {
+        //        //TODO: load default
+        //    }
 
-            if (highIcon == null)
-            {
-                highIcon = regIcon;
-            }
+        //    if (highIcon == null)
+        //    {
+        //        highIcon = regIcon;
+        //    }
 
-            if (suppIcon == null)
-            {
-                suppIcon = regIcon;
-            }
+        //    if (suppIcon == null)
+        //    {
+        //        suppIcon = regIcon;
+        //    }
 
-            var isHighRes = true;
+        //    var isHighRes = true;
 
-            var icons = new List<string>();
+        //    var icons = new List<string>();
 
-            var regIconPahs = m_IconsConverter.ConvertIcon(regIcon, isHighRes);
-            var suppIconPahs = m_IconsConverter.ConvertIcon(suppIcon, isHighRes);
-            var highIconPahs = m_IconsConverter.ConvertIcon(highIcon, isHighRes);
+        //    var regIconPahs = m_IconsConverter.ConvertIcon(regIcon, isHighRes);
+        //    var suppIconPahs = m_IconsConverter.ConvertIcon(suppIcon, isHighRes);
+        //    var highIconPahs = m_IconsConverter.ConvertIcon(highIcon, isHighRes);
 
-            for (int i = 0; i < regIconPahs.Length; i++)
-            {
-                icons.Add(regIconPahs[i]);
-                icons.Add(suppIconPahs[i]);
-                icons.Add(highIconPahs[i]);
-            }
+        //    for (int i = 0; i < regIconPahs.Length; i++)
+        //    {
+        //        icons.Add(regIconPahs[i]);
+        //        icons.Add(suppIconPahs[i]);
+        //        icons.Add(highIconPahs[i]);
+        //    }
 
-            return icons.ToArray();
-        }
+        //    return icons.ToArray();
+        //}
     }
 }

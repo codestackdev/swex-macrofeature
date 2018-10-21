@@ -23,19 +23,25 @@ namespace CodeStack.SwEx.MacroFeature.Attributes
         internal IIcon Suppressed { get; private set; }
         internal IIcon Highlighted { get; private set; }
 
-        public IconAttribute(Type resType, string resName)
+        internal string IconFolderName { get; private set; }
+
+        public IconAttribute(Type resType, string resName, string iconFolderName = "")
         {
             Regular = CreateIcon(resType, resName, MacroFeatureIconInfo.RegularName);
             Suppressed = CreateIcon(resType, resName, MacroFeatureIconInfo.SuppressedName);
             Highlighted = CreateIcon(resType, resName, MacroFeatureIconInfo.HighlightedName);
+
+            IconFolderName = iconFolderName;
         }
         
         public IconAttribute(Type resType, string smallResName, string mediumResName,
-            string largeResName)
+            string largeResName, string iconFolderName = "")
         {
             Regular = CreateIcon(resType, smallResName, mediumResName, largeResName, MacroFeatureIconInfo.RegularName);
             Suppressed = CreateIcon(resType, smallResName, mediumResName, largeResName, MacroFeatureIconInfo.SuppressedName);
             Highlighted = CreateIcon(resType, smallResName, mediumResName, largeResName, MacroFeatureIconInfo.HighlightedName);
+
+            IconFolderName = iconFolderName;
         }
 
         //TODO: add another 2 constructors for specifying suppressed and highlighted

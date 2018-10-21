@@ -6,6 +6,8 @@
 //**********************
 
 using CodeStack.SwEx.Common.Icons;
+using CodeStack.SwEx.Common.Reflection;
+using CodeStack.SwEx.MacroFeature.Attributes;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -28,7 +30,17 @@ namespace CodeStack.SwEx.MacroFeature.Icons
 
         internal static string GetLocation(Type macroFeatType)
         {
-            return Path.Combine(Path.GetTempPath(), $"{macroFeatType.FullName}_MacroFeatureIcons");
+            var iconFolderName = "";
+
+            macroFeatType.TryGetAttribute<IconAttribute>(a => iconFolderName = a.IconFolderName);
+
+            if (string.IsNullOrEmpty(iconFolderName))
+            {
+                iconFolderName = $"{macroFeatType.FullName}\\MacroFeatureIcons";
+            }
+
+            return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData),
+                iconFolderName);
         }
 
         internal static string[] GetIcons(Type macroFeatType, bool highRes)
