@@ -35,6 +35,15 @@ namespace CodeStack.SwEx.MacroFeature.Helpers
             featData.GetParameters(out retParamNames, out paramTypes, out retParamValues);
             featData.GetSelections3(out retSelObj, out selObjType, out selMarks, out selDrViews, out compXforms);
 
+            var dispDimsObj = featData.GetDisplayDimensions() as object[];
+
+            IDisplayDimension[] dispDims = null;
+
+            if (dispDimsObj != null)
+            {
+                dispDims = dispDimsObj.Cast<IDisplayDimension>().ToArray();
+            }
+
             var paramNames = retParamNames as string[];
             var paramValues = retParamValues as string[];
             var selObjects = retSelObj as object[];
@@ -55,6 +64,22 @@ namespace CodeStack.SwEx.MacroFeature.Helpers
                             $"Referenced entity is missing at index {selIndex} for {prp.PropertyType.Name}");
                     }
                 },
+                (dimInd, dimType, prp) => 
+                {
+                    if (dispDims.Length > dimInd)
+                    {
+                        var dispDim = dispDims[dimInd];
+                        var val = (dispDim.GetDimension2(0).GetSystemValue3(
+                            (int)swInConfigurationOpts_e.swSpecifyConfiguration,
+                            new string[] { featData.CurrentConfiguration.Name }) as double[])[0];
+                        prp.SetValue(resParams, val, null);
+                    }
+                    else
+                    {
+                        throw new IndexOutOfRangeException(
+                            $"Dimension at index {dimInd} id not present in the macro feature");
+                    }
+                },
                 prp =>
                 {
                     var paramVal = GetParameterValue(paramNames, paramValues, prp.Name);
@@ -65,7 +90,8 @@ namespace CodeStack.SwEx.MacroFeature.Helpers
             return resParams;
         }
 
-        internal void SetParameters(IMacroFeatureData featData, object parameters)
+        internal void SetParameters(IMacroFeatureData featData, object parameters,
+            Action<IDisplayDimension, int, double> handler)
         {
             string[] paramNames;
             int[] paramTypes;
@@ -90,7 +116,38 @@ namespace CodeStack.SwEx.MacroFeature.Helpers
                 featData.SetSelections2(dispWraps, new int[selection.Length], new IView[selection.Length]);
             }
 
-            //TODO: set dimensions
+            var dispDimsObj = featData.GetDisplayDimensions() as object[];
+
+            if (dispDimsObj != null)
+            {
+                for (int i = 0; i < dispDimsObj.Length; i++)
+                {
+                    var dispDim = dispDimsObj[i] as IDisplayDimension;
+                    SetAndReleaseDimension(dispDim, i, dimValues[i],
+                        featData.CurrentConfiguration.Name, handler);
+                }
+            }
+        }
+
+        private void SetAndReleaseDimension(IDisplayDimension dispDim,
+            int index, double val, string confName, Action<IDisplayDimension, int, double> handler)
+        {
+            var dim = dispDim.GetDimension2(0);
+            
+            dim.SetSystemValue3(val,
+                (int)swSetValueInConfiguration_e.swSetValue_InSpecificConfigurations,
+                new string[] { confName });
+
+            //handler.Invoke(dispDim, index, val);
+
+            //NOTE: releasing the pointers as unreleased pointer might cause crash
+            //Marshal.ReleaseComObject(dim);
+            //Marshal.ReleaseComObject(dispDim);
+            //dim = null;
+            //dispDim = null;
+            //GC.Collect();
+            //GC.Collect();
+            //GC.WaitForPendingFinalizers();
         }
 
         internal void Parse(object parameters,
@@ -102,9 +159,8 @@ namespace CodeStack.SwEx.MacroFeature.Helpers
             var paramTypesList = new List<int>();
             var paramValuesList = new List<string>();
             var selectionList = new Dictionary<int, object>();
-            var dimTypesList = new List<int>();
-            var dimValuesList = new List<double>();
-
+            var dimsList = new Dictionary<int, Tuple<swDimensionType_e, double>>();
+            
             TraverseParametersDefinition(parameters.GetType(),
                 (selIndex, prp) =>
                 {
@@ -125,6 +181,11 @@ namespace CodeStack.SwEx.MacroFeature.Helpers
                         throw new NullReferenceException(
                             $"Selection entity for {prp.PropertyType.Name} at selection index {selIndex} is null");
                     }
+                },
+                (dimInd, dimType, prp) =>
+                {
+                    var val = Convert.ToDouble(prp.GetValue(parameters, null));
+                    dimsList.Add(dimInd, new Tuple<swDimensionType_e, double>(dimType, val));
                 },
                 prp =>
                 {
@@ -150,12 +211,7 @@ namespace CodeStack.SwEx.MacroFeature.Helpers
                     paramValuesList.Add(Convert.ToString(val));
                 });
 
-            var isConsecutive = !selectionList.OrderBy(e => e.Key)
-                .Select(e => e.Key)
-                .Select((i, j) => i - j)
-                .Distinct().Skip(1).Any();
-
-            if (!isConsecutive)
+            if (!IsConsecutive(selectionList.Keys))
             {
                 throw new InvalidOperationException("Selection elements indices are not consecutive");
             }
@@ -166,24 +222,46 @@ namespace CodeStack.SwEx.MacroFeature.Helpers
             paramTypes = paramTypesList.ToArray();
             paramValues = paramValuesList.ToArray();
             selection = disps.ToArray();
-            dimTypes = dimTypesList.ToArray();
-            dimValues = dimValuesList.ToArray();
+
+            if (!IsConsecutive(dimsList.Keys))
+            {
+                throw new InvalidOperationException("Dimensions elements indices are not consecutive");
+            }
+
+            dimTypes = dimsList.OrderBy(d => d.Key).Select(d => (int)d.Value.Item1).ToArray();
+            dimValues = dimsList.OrderBy(d => d.Key).Select(d => d.Value.Item2).ToArray();
+        }
+
+        private static bool IsConsecutive(IEnumerable<int> selectionList)
+        {
+            return !selectionList.OrderBy(k => k)
+                            .Select((i, j) => i - j)
+                            .Distinct().Skip(1).Any();
         }
 
         private void TraverseParametersDefinition(Type paramsType,
-            Action<int, PropertyInfo> selParamHandler, Action<PropertyInfo> dataParamHandler)
+            Action<int, PropertyInfo> selParamHandler,
+            Action<int, swDimensionType_e, PropertyInfo> dimParamHandler,
+            Action<PropertyInfo> dataParamHandler)
         {
             foreach (var prp in paramsType.GetProperties())
             {
                 var prpType = prp.PropertyType;
 
                 var selAtt = prp.TryGetAttribute<ParameterSelectionAttribute>();
+                var dimAtt = prp.TryGetAttribute<ParameterDimensionAttribute>();
 
                 if (selAtt != null)
                 {
                     var selIndex = selAtt.SelectionIndex;
 
                     selParamHandler.Invoke(selIndex, prp);
+                }
+                else if (dimAtt != null)
+                {
+                    var dimType = dimAtt.DimensionType;
+                    var dimInd = dimAtt.DimensionIndex;
+                    dimParamHandler.Invoke(dimInd, dimType, prp);
                 }
                 else
                 {

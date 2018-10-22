@@ -14,16 +14,6 @@ using System.Text;
 
 namespace CodeStack.SwEx.MacroFeature.Example
 {
-    public class MyParams
-    {
-    }
-
-    [ComVisible(true)]
-    [Icon(typeof(Resources), nameof(Resources.codestack), "CodeStack\\MacroFeatureExample\\Icons")]
-    public class MyMacroFeature : MacroFeatureEx<MyParams>
-    {
-    }
-
     [Guid("E5A3CBAF-75AE-4120-85BB-1A5784D738BC"), ComVisible(true)]
     [SwAddin(
     Description = "SwEx.MacroFeature example add-in",
@@ -38,7 +28,8 @@ namespace CodeStack.SwEx.MacroFeature.Example
         private BitmapHandler m_Bmp;
 
         public const int CMD_GRP_ID = 0;
-        public const int CMD_PMP_ID = 1;
+        public const int CMD_CreateParamsMacroFeature = 1;
+        public const int CMD_DimensionMacroFeature = 2;
 
         #region SolidWorks Registration
 
@@ -114,9 +105,24 @@ namespace CodeStack.SwEx.MacroFeature.Example
             return true;
         }
 
-        public void CreateMacroFeature()
+        public void CreateParamsMacroFeature()
         {
-            m_App.IActiveDoc2.FeatureManager.InsertComFeature<MyMacroFeature, MyParams>(new MyParams());
+            m_App.IActiveDoc2.FeatureManager.InsertComFeature<ParamsMacroFeature, ParamsMacroFeatureParams>(
+                new ParamsMacroFeatureParams()
+                {
+                    Param1 = Guid.NewGuid().ToString(),
+                    EditDefinitionsCount = 0
+                });
+        }
+
+
+        public void CreateDimensionMacroFeature()
+        {
+            m_App.IActiveDoc2.FeatureManager.InsertComFeature<DimensionMacroFeature, DimensionMacroFeatureParams>(
+                new DimensionMacroFeatureParams()
+                {
+                    RefDimension = 0.01
+                });
         }
 
         public bool DisconnectFromSW()
@@ -140,16 +146,7 @@ namespace CodeStack.SwEx.MacroFeature.Example
         private void AddCommandMgr()
         {
             ICommandGroup cmdGroup;
-
-            int cmdIndex;
-
-            var docTypes = new int[]
-            {
-                (int)swDocumentTypes_e.swDocASSEMBLY,
-                (int)swDocumentTypes_e.swDocDRAWING,
-                (int)swDocumentTypes_e.swDocPART
-            };
-
+            
             var thisAssembly = Assembly.GetAssembly(this.GetType());
 
             int cmdGroupErr = 0;
@@ -159,7 +156,11 @@ namespace CodeStack.SwEx.MacroFeature.Example
 
             bool getDataResult = m_CmdMgr.GetGroupDataFromRegistry(CMD_GRP_ID, out registryIDs);
 
-            var knownIDs = new int[] { CMD_PMP_ID };
+            var knownIDs = new int[] 
+            {
+                CMD_CreateParamsMacroFeature,
+                CMD_CreateParamsMacroFeature
+            };
 
             if (getDataResult)
             {
@@ -175,9 +176,17 @@ namespace CodeStack.SwEx.MacroFeature.Example
             cmdGroup.LargeMainIcon = m_Bmp.CreateFileFromResourceBitmap("AddIn.Icons.IconLarge.bmp", thisAssembly);
             cmdGroup.SmallMainIcon = m_Bmp.CreateFileFromResourceBitmap("AddIn.Icons.IconSmall.bmp", thisAssembly);
 
-            int menuToolbarOption = (int)(swCommandItemType_e.swMenuItem | swCommandItemType_e.swToolbarItem);
-            cmdIndex = cmdGroup.AddCommandItem2("CreateMacroFeature", -1, "Creates sample macro feature",
-                "CreateMacroFeature", 0, "CreateMacroFeature", "", CMD_PMP_ID, menuToolbarOption);
+            var menuToolbarOption = (int)(swCommandItemType_e.swMenuItem | swCommandItemType_e.swToolbarItem);
+
+            cmdGroup.AddCommandItem2(nameof(CreateParamsMacroFeature), -1,
+                "Creates sample macro feature with parameters",
+                nameof(CreateParamsMacroFeature), 0, nameof(CreateParamsMacroFeature),
+                "", CMD_CreateParamsMacroFeature, menuToolbarOption);
+
+            cmdGroup.AddCommandItem2(nameof(CreateDimensionMacroFeature), -1,
+                "Creates sample macro feature with dimensions",
+                nameof(CreateDimensionMacroFeature), 0, nameof(CreateDimensionMacroFeature),
+                "", CMD_DimensionMacroFeature, menuToolbarOption);
 
             cmdGroup.HasToolbar = true;
             cmdGroup.HasMenu = true;

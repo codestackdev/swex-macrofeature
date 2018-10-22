@@ -129,6 +129,8 @@ namespace CodeStack.SwEx.MacroFeature
 
             var res = OnRebuild(app as ISldWorks, modelDoc as IModelDoc2, feature as IFeature);
 
+            UpdateDimensions(feature as IFeature);
+
             if (res != null)
             {
                 return res.GetResult();
@@ -136,6 +138,41 @@ namespace CodeStack.SwEx.MacroFeature
             else
             {
                 return null;
+            }
+        }
+
+        private void UpdateDimensions(IFeature feature)
+        {
+            var featData = feature.GetDefinition() as IMacroFeatureData;
+
+            var dispDimsObj = featData.GetDisplayDimensions() as object[];
+
+            IDisplayDimension[] dispDims = null;
+
+            if (dispDimsObj != null)
+            {
+                dispDims = dispDimsObj.Cast<IDisplayDimension>().ToArray();
+                
+                for (int i = 0; i < dispDims.Length; i++)
+                {
+                    var dispDim = dispDims[i];
+                    var dim = dispDim.GetDimension2(0);
+
+                    var val = (dispDim.GetDimension2(0).GetSystemValue3(
+                        (int)swInConfigurationOpts_e.swSpecifyConfiguration,
+                        new string[] { featData.CurrentConfiguration.Name }) as double[])[0];
+
+                    OnSetDimension(dispDim, i, val);
+
+                    Marshal.ReleaseComObject(dim);
+                    Marshal.ReleaseComObject(dispDim);
+                    dim = null;
+                    dispDim = null;
+                }
+
+                GC.Collect();
+                GC.Collect();
+                GC.WaitForPendingFinalizers();
             }
         }
         
@@ -146,6 +183,10 @@ namespace CodeStack.SwEx.MacroFeature
                 feature as IFeature, true);
 
             return OnUpdateState(app as ISldWorks, modelDoc as IModelDoc2, feature as IFeature);
+        }
+
+        protected virtual void OnSetDimension(IDisplayDimension dispDim, int index, double value)
+        {
         }
 
         private void InitAndValidateFeature(ISldWorks app, IModelDoc2 model, IFeature feat, bool validateIcons = false)
@@ -159,6 +200,7 @@ namespace CodeStack.SwEx.MacroFeature
             //}
         }
 
+        //this method crashes SOLIDWORKS - need to research
         private void UpdateIconsIfRequired(IModelDoc2 model, IFeature feat)
         {
             var data = (feat as IFeature).GetDefinition() as IMacroFeatureData;
@@ -205,6 +247,7 @@ namespace CodeStack.SwEx.MacroFeature
             return swMacroFeatureSecurityOptions_e.swMacroFeatureSecurityByDefault;
         }
 
+        [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
         protected virtual Type MacroFeatureHandlerType
         {
             get
@@ -231,8 +274,9 @@ namespace CodeStack.SwEx.MacroFeature
 
         protected void SetParameters(IMacroFeatureData featData, TParams parameters)
         {
-            m_ParamsParser.SetParameters(featData, parameters);
+            m_ParamsParser.SetParameters(featData, parameters, OnSetDimension);
         }
+
     }
 
     public abstract class MacroFeatureEx<TParams, THandler> : MacroFeatureEx<TParams>
@@ -244,6 +288,7 @@ namespace CodeStack.SwEx.MacroFeature
         //{
         //}
 
+        [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
         protected override Type MacroFeatureHandlerType
         {
             get
