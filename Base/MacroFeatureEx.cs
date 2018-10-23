@@ -37,6 +37,12 @@ namespace CodeStack.SwEx.MacroFeature
             }
         }
 
+        internal static string GetBaseName<TMacroFeature>()
+            where TMacroFeature : MacroFeatureEx
+        {
+            return GetBaseName(typeof(TMacroFeature));
+        }
+
         internal static string GetBaseName(Type macroFeatType)
         {
             if (!typeof(MacroFeatureEx).IsAssignableFrom(macroFeatType))
@@ -58,6 +64,19 @@ namespace CodeStack.SwEx.MacroFeature
             }
 
             return baseName;
+        }
+
+        internal static string GetProgId<TMacroFeature>()
+            where TMacroFeature : MacroFeatureEx
+        {
+            string progId = "";
+
+            if (!typeof(TMacroFeature).TryGetAttribute<ProgIdAttribute>(a => progId = a.Value))
+            {
+                progId = typeof(TMacroFeature).FullName;
+            }
+
+            return progId;
         }
 
         private MacroFeatureRegister m_Register;
@@ -117,7 +136,6 @@ namespace CodeStack.SwEx.MacroFeature
         [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
         public object Edit(object app, object modelDoc, object feature)
         {
-            //UpdateIconsIfRequired(modelDoc as IModelDoc2, feature as IFeature);
             return OnEditDefinition(app as ISldWorks, modelDoc as IModelDoc2, feature as IFeature);
         }
 
@@ -126,7 +144,7 @@ namespace CodeStack.SwEx.MacroFeature
         {
             InitAndValidateFeature(app as ISldWorks, modelDoc as IModelDoc2,
                 feature as IFeature);
-
+            
             var res = OnRebuild(app as ISldWorks, modelDoc as IModelDoc2, feature as IFeature);
 
             UpdateDimensions(feature as IFeature);
@@ -141,41 +159,42 @@ namespace CodeStack.SwEx.MacroFeature
             }
         }
 
-        private void UpdateDimensions(IFeature feature)
+        private void UpdateDimensions(IFeature feat)
         {
-            var featData = feature.GetDefinition() as IMacroFeatureData;
+            var featData = feat.GetDefinition() as IMacroFeatureData;
 
-            var dispDimsObj = featData.GetDisplayDimensions() as object[];
+            var dispDims = featData.GetDisplayDimensions() as object[];
 
-            IDisplayDimension[] dispDims = null;
-
-            if (dispDimsObj != null)
+            if (dispDims != null)
             {
-                dispDims = dispDimsObj.Cast<IDisplayDimension>().ToArray();
-                
                 for (int i = 0; i < dispDims.Length; i++)
                 {
-                    var dispDim = dispDims[i];
+                    var dispDim = dispDims[i] as IDisplayDimension;
                     var dim = dispDim.GetDimension2(0);
 
-                    var val = (dispDim.GetDimension2(0).GetSystemValue3(
+                    var val = (dim.GetSystemValue3(
                         (int)swInConfigurationOpts_e.swSpecifyConfiguration,
                         new string[] { featData.CurrentConfiguration.Name }) as double[])[0];
 
-                    OnSetDimension(dispDim, i, val);
+                    OnSetDimension(dispDim, dim, i, val);
 
                     Marshal.ReleaseComObject(dim);
                     Marshal.ReleaseComObject(dispDim);
                     dim = null;
                     dispDim = null;
+                    dispDims[i] = null;
                 }
 
+                dispDims = null;
                 GC.Collect();
                 GC.Collect();
                 GC.WaitForPendingFinalizers();
             }
         }
-        
+        protected virtual void OnSetDimension(IDisplayDimension dispDim, IDimension dim, int index, double value)
+        {
+        }
+
         [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
         public object Security(object app, object modelDoc, object feature)
         {
@@ -184,11 +203,7 @@ namespace CodeStack.SwEx.MacroFeature
 
             return OnUpdateState(app as ISldWorks, modelDoc as IModelDoc2, feature as IFeature);
         }
-
-        protected virtual void OnSetDimension(IDisplayDimension dispDim, int index, double value)
-        {
-        }
-
+        
         private void InitAndValidateFeature(ISldWorks app, IModelDoc2 model, IFeature feat, bool validateIcons = false)
         {
             bool isNew = true;
@@ -201,7 +216,7 @@ namespace CodeStack.SwEx.MacroFeature
         }
 
         //this method crashes SOLIDWORKS - need to research
-        private void UpdateIconsIfRequired(IModelDoc2 model, IFeature feat)
+        private void UpdateIconsIfRequired(ISldWorks app, IModelDoc2 model, IFeature feat)
         {
             var data = (feat as IFeature).GetDefinition() as IMacroFeatureData;
             data.AccessSelections(model, null);
@@ -226,7 +241,7 @@ namespace CodeStack.SwEx.MacroFeature
                     return !File.Exists(iconPath);
                 }))
                 {
-                    data.IconFiles = MacroFeatureIconInfo.GetIcons(this.GetType(), true);
+                    data.IconFiles = MacroFeatureIconInfo.GetIcons(this.GetType(), app.SupportsHighResIcons());
                     feat.ModifyDefinition(data, model, null);
                 }
             }
@@ -257,30 +272,57 @@ namespace CodeStack.SwEx.MacroFeature
         }
     }
 
-    public abstract class MacroFeatureEx<TParams> : MacroFeatureEx
-        where TParams : class, new()
-    {
-        private readonly MacroFeatureParametersParser m_ParamsParser;
+    //public abstract class MacroFeatureEx<TParams> : MacroFeatureEx
+    //    where TParams : class, new()
+    //{
+    //    protected override MacroFeatureRebuildResult OnRebuild(ISldWorks app, IModelDoc2 model, IFeature feature)
+    //    {
+    //        var res = base.OnRebuild(app, model, feature);
 
-        public MacroFeatureEx()
-        {
-            m_ParamsParser = new MacroFeatureParametersParser();
-        }
+    //        UpdateDimensions(feature as IFeature);
 
-        protected TParams GetParameters(IMacroFeatureData featData)
-        {
-            return m_ParamsParser.GetParameters<TParams>(featData);
-        }
+    //        return res;
+    //    }
 
-        protected void SetParameters(IMacroFeatureData featData, TParams parameters)
-        {
-            m_ParamsParser.SetParameters(featData, parameters, OnSetDimension);
-        }
+    //    private void UpdateDimensions(IFeature feat)
+    //    {
+    //        var featData = feat.GetDefinition() as IMacroFeatureData;
 
-    }
+    //        var dispDims = featData.GetDisplayDimensions() as object[];
 
-    public abstract class MacroFeatureEx<TParams, THandler> : MacroFeatureEx<TParams>
-        where TParams : class, IMacroFeatureHandler, new()
+    //        if (dispDims != null)
+    //        {
+    //            for (int i = 0; i < dispDims.Length; i++)
+    //            {
+    //                var dispDim = dispDims[i] as IDisplayDimension;
+    //                var dim = dispDim.GetDimension2(0);
+
+    //                var val = (dim.GetSystemValue3(
+    //                    (int)swInConfigurationOpts_e.swSpecifyConfiguration,
+    //                    new string[] { featData.CurrentConfiguration.Name }) as double[])[0];
+
+    //                OnSetDimension(dispDim, dim, i, val);
+
+    //                Marshal.ReleaseComObject(dim);
+    //                Marshal.ReleaseComObject(dispDim);
+    //                dim = null;
+    //                dispDim = null;
+    //                dispDims[i] = null;
+    //            }
+
+    //            dispDims = null;
+    //            GC.Collect();
+    //            GC.Collect();
+    //            GC.WaitForPendingFinalizers();
+    //        }
+    //    }
+    //    protected virtual void OnSetDimension(IDisplayDimension dispDim, IDimension dim, int index, double value)
+    //    {
+    //    }
+    //}
+
+    public abstract class MacroFeatureEx<THandler> : MacroFeatureEx
+        where THandler : class, IMacroFeatureHandler, new()
     {
         //private Dictionary<IMacroFeatureData, THandler> m_Handlers;
 

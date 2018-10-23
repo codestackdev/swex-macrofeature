@@ -69,7 +69,8 @@ namespace CodeStack.SwEx.MacroFeature.Helpers
                     if (dispDims.Length > dimInd)
                     {
                         var dispDim = dispDims[dimInd];
-                        var val = (dispDim.GetDimension2(0).GetSystemValue3(
+                        var dim = dispDim.GetDimension2(0);
+                        var val = (dim.GetSystemValue3(
                             (int)swInConfigurationOpts_e.swSpecifyConfiguration,
                             new string[] { featData.CurrentConfiguration.Name }) as double[])[0];
                         prp.SetValue(resParams, val, null);
@@ -90,8 +91,7 @@ namespace CodeStack.SwEx.MacroFeature.Helpers
             return resParams;
         }
 
-        internal void SetParameters(IMacroFeatureData featData, object parameters,
-            Action<IDisplayDimension, int, double> handler)
+        internal void SetParameters(IMacroFeatureData featData, object parameters)
         {
             string[] paramNames;
             int[] paramTypes;
@@ -124,30 +124,28 @@ namespace CodeStack.SwEx.MacroFeature.Helpers
                 {
                     var dispDim = dispDimsObj[i] as IDisplayDimension;
                     SetAndReleaseDimension(dispDim, i, dimValues[i],
-                        featData.CurrentConfiguration.Name, handler);
+                        featData.CurrentConfiguration.Name);
                 }
             }
         }
 
         private void SetAndReleaseDimension(IDisplayDimension dispDim,
-            int index, double val, string confName, Action<IDisplayDimension, int, double> handler)
+            int index, double val, string confName)
         {
             var dim = dispDim.GetDimension2(0);
             
             dim.SetSystemValue3(val,
                 (int)swSetValueInConfiguration_e.swSetValue_InSpecificConfigurations,
                 new string[] { confName });
-
-            //handler.Invoke(dispDim, index, val);
-
+            
             //NOTE: releasing the pointers as unreleased pointer might cause crash
-            //Marshal.ReleaseComObject(dim);
-            //Marshal.ReleaseComObject(dispDim);
-            //dim = null;
-            //dispDim = null;
-            //GC.Collect();
-            //GC.Collect();
-            //GC.WaitForPendingFinalizers();
+            Marshal.ReleaseComObject(dim);
+            Marshal.ReleaseComObject(dispDim);
+            dim = null;
+            dispDim = null;
+            GC.Collect();
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
         }
 
         internal void Parse(object parameters,

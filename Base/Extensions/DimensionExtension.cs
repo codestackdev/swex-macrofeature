@@ -1,4 +1,5 @@
-﻿using CodeStack.SwEx.MacroFeature.Structs;
+﻿using CodeStack.SwEx.MacroFeature.Helpers;
+using CodeStack.SwEx.MacroFeature.Structs;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -6,22 +7,29 @@ using System.Text;
 
 namespace SolidWorks.Interop.sldworks
 {
-    public static class DisplayDimensionExtension
+    public static class DimensionExtension
     {
-        //TODO: remove math utils from the parameters
+        private static readonly ISldWorks m_App;
 
-        public static void SetDimensionPosition(this IDisplayDimension dispDim,
-            Point originPt, Vector dir, double length, IMathUtility mathUtil)
+        static DimensionExtension()
         {
-            var dimDirVec = mathUtil.CreateVector(dir.ToArray()) as MathVector;
-            var startPt = mathUtil.CreatePoint(originPt.ToArray()) as IMathPoint;
+            m_App = Context.CurrentApp;
+        }
+
+        public static void SetDimensionPosition(this IDimension dim,
+            Point originPt, Vector dir, double length)
+        {
+            var mathUtils = m_App.IGetMathUtility();
+
+            var dimDirVec = mathUtils.CreateVector(dir.ToArray()) as MathVector;
+            var startPt = mathUtils.CreatePoint(originPt.ToArray()) as IMathPoint;
             var endPt = MovePoint(startPt, dimDirVec, length);
 
             var refPts = new IMathPoint[] 
             {
                 startPt,
                 endPt,
-                mathUtil.CreatePoint(new double[3]) as IMathPoint
+                mathUtils.CreatePoint(new double[3]) as IMathPoint
             };
 
             MathVector extDirVec = null;
@@ -30,15 +38,13 @@ namespace SolidWorks.Interop.sldworks
             if (dir.IsSame(yVec))
             {
                 var xVec = new double[] { 1, 0, 0 };
-                extDirVec = mathUtil.CreateVector(xVec) as MathVector;
+                extDirVec = mathUtils.CreateVector(xVec) as MathVector;
             }
             else
             {
-                extDirVec = (mathUtil.CreateVector(yVec.ToArray()) as MathVector).Cross(dimDirVec) as MathVector;
+                extDirVec = (mathUtils.CreateVector(yVec.ToArray()) as MathVector).Cross(dimDirVec) as MathVector;
             }
-
-            var dim = dispDim.GetDimension2(0);
-
+            
             dim.DimensionLineDirection = dimDirVec;
             dim.ExtensionLineDirection = extDirVec;
             dim.ReferencePoints = refPts;

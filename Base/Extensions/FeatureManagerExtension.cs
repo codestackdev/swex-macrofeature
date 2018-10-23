@@ -21,63 +21,17 @@ using System.Text;
 
 namespace SolidWorks.Interop.sldworks
 {
-    /// <summary>
-    /// Dimension data to add to macro feature
-    /// </summary>
-    //public class MacroFeatureDimension
-    //{
-    //    private static readonly swDimensionType_e[] m_SupportedTypes = new swDimensionType_e[]
-    //    {
-    //        swDimensionType_e.swAngularDimension,
-    //        swDimensionType_e.swLinearDimension,
-    //        swDimensionType_e.swRadialDimension
-    //    };
-
-    //    public swDimensionType_e Type { get; private set; }
-    //    public double Value { get; private set; }
-
-    //    public MacroFeatureDimension(swDimensionType_e type, double value)
-    //    {
-    //        if (!m_SupportedTypes.Contains(type))
-    //        {
-    //            throw new NotSupportedException($"Dimension {type} is not supported");
-    //        }
-
-    //        Type = type;
-    //        Value = value;
-    //    }
-    //}
-
-    /// <summary>
-    /// Icons information to add to macro feature
-    /// </summary>
-    //public class MacroFeatureIcons
-    //{
-    //    public string Regular { get; private set; }
-    //    public string Suppressed { get; private set; }
-    //    public string Highlighted { get; private set; }
-
-    //    public MacroFeatureIcons(string regular, string suppressed, string highlighted)
-    //    {
-    //        Regular = regular;
-    //        Suppressed = suppressed;
-    //        Highlighted = highlighted;
-    //    }
-
-    //    public MacroFeatureIcons(string icon) : this(icon, icon, icon)
-    //    {
-    //    }
-    //}
-
     public static class FeatureManagerExtension
     {
         private static readonly MacroFeatureParametersParser m_ParamsParser;
         private static readonly IconsConverter m_IconsConverter;
+        private static readonly ISldWorks m_App;
 
         static FeatureManagerExtension()
         {
             m_ParamsParser = new MacroFeatureParametersParser();
             m_IconsConverter = new IconsConverter();
+            m_App = Context.CurrentApp;
         }
 
         /// <summary>
@@ -89,7 +43,7 @@ namespace SolidWorks.Interop.sldworks
         /// <param name="parameters">Parameters to serialize to macro feature</param>
         /// <returns>Newly created feature</returns>
         public static IFeature InsertComFeature<TMacroFeature, TParams>(this IFeatureManager featMgr, TParams parameters)
-            where TMacroFeature : MacroFeatureEx<TParams>
+            where TMacroFeature : MacroFeatureEx
             where TParams : class, new()
         {
             return InsertComFeatureWithParameters<TMacroFeature>(featMgr, parameters);
@@ -143,16 +97,16 @@ namespace SolidWorks.Interop.sldworks
                 options = a.Flags;
             });
 
-            var baseName = MacroFeatureEx.GetBaseName(typeof(TMacroFeature));
+            var baseName = MacroFeatureEx.GetBaseName<TMacroFeature>();
 
-            var progId = GetProgId<TMacroFeature>();
+            var progId = MacroFeatureEx.GetProgId<TMacroFeature>();
 
             if (string.IsNullOrEmpty(progId))
             {
                 throw new NullReferenceException("Prog id for macro feature cannot be extracted");
             }
 
-            var icons = MacroFeatureIconInfo.GetIcons(typeof(TMacroFeature), true);
+            var icons = MacroFeatureIconInfo.GetIcons(typeof(TMacroFeature), m_App.SupportsHighResIcons());
 
             using (var selSet = new SelectionGroup(featMgr.Document.ISelectionManager))
             {
@@ -170,65 +124,5 @@ namespace SolidWorks.Interop.sldworks
                 return res;
             }
         }
-
-        private static string GetProgId<TMacroFeature>()
-            where TMacroFeature : MacroFeatureEx
-        {
-            string progId = "";
-
-            if (!typeof(TMacroFeature).TryGetAttribute<ProgIdAttribute>(a => progId = a.Value))
-            {
-                progId = typeof(TMacroFeature).FullName;
-            }
-
-            return progId;
-        }
-
-        //private static string[] GetIcons<TMacroFeature>()
-        //    where TMacroFeature : MacroFeatureEx
-        //{
-        //    IIcon regIcon = null;
-        //    IIcon highIcon = null;
-        //    IIcon suppIcon = null;
-
-        //    typeof(TMacroFeature).TryGetAttribute<IconAttribute>(a =>
-        //    {
-        //        regIcon = a.Regular;
-        //        highIcon = a.Highlighted;
-        //        suppIcon = a.Suppressed;
-        //    });
-
-        //    if (regIcon == null)
-        //    {
-        //        //TODO: load default
-        //    }
-
-        //    if (highIcon == null)
-        //    {
-        //        highIcon = regIcon;
-        //    }
-
-        //    if (suppIcon == null)
-        //    {
-        //        suppIcon = regIcon;
-        //    }
-
-        //    var isHighRes = true;
-
-        //    var icons = new List<string>();
-
-        //    var regIconPahs = m_IconsConverter.ConvertIcon(regIcon, isHighRes);
-        //    var suppIconPahs = m_IconsConverter.ConvertIcon(suppIcon, isHighRes);
-        //    var highIconPahs = m_IconsConverter.ConvertIcon(highIcon, isHighRes);
-
-        //    for (int i = 0; i < regIconPahs.Length; i++)
-        //    {
-        //        icons.Add(regIconPahs[i]);
-        //        icons.Add(suppIconPahs[i]);
-        //        icons.Add(highIconPahs[i]);
-        //    }
-
-        //    return icons.ToArray();
-        //}
     }
 }

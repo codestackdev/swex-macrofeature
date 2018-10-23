@@ -68,7 +68,10 @@
     <Compile Include="Base\MacroFeatureRebuildPatternResult.cs" />
     <Compile Include="Base\MacroFeatureRebuildResult.cs" />
     <Compile Include="Base\MacroFeatureRebuldStatusResult.cs" />
-    <Compile Include="Extensions\DisplayDimensionExtension.cs" />
+    <Compile Include="Extensions\MacroFeatureDataExtension.cs" />
+    <Compile Include="Extensions\SldWorksExtension.cs" />
+    <Compile Include="Helpers\Context.cs" />
+    <Compile Include="Extensions\DimensionExtension.cs" />
     <Compile Include="Extensions\FeatureManagerExtension.cs" />
     <Compile Include="Helpers\MacroFeatureLifecycleManager.cs" />
     <Compile Include="Helpers\MacroFeatureRegister.cs" />
