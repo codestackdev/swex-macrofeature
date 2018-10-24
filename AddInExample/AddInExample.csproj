@@ -57,6 +57,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="DimensionMacroFeature.cs" />
+    <Compile Include="GeometryMacroFeature.cs" />
     <Compile Include="MacroFeatureAddInExample.cs" />
     <Compile Include="ParamsMacroFeature.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

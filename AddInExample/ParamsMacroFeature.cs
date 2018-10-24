@@ -17,7 +17,7 @@ namespace CodeStack.SwEx.MacroFeature.Example
 
     [ComVisible(true)]
     [Icon(typeof(Resources), nameof(Resources.codestack), "CodeStack\\MacroFeatureExample\\Icons")]
-    public class ParamsMacroFeature : MacroFeatureEx
+    public class ParamsMacroFeature : MacroFeatureEx<ParamsMacroFeatureParams>
     {
         protected override bool OnEditDefinition(ISldWorks app, IModelDoc2 model, IFeature feature)
         {
@@ -25,12 +25,12 @@ namespace CodeStack.SwEx.MacroFeature.Example
 
             featData.AccessSelections(model, null);
 
-            var featParams = featData.GetParameters<ParamsMacroFeatureParams>();
+            var featParams = GetParameters(featData);
 
             app.SendMsgToUser($"{nameof(featParams.Param1)} = {featParams.Param1}; {nameof(featParams.EditDefinitionsCount)} = {featParams.EditDefinitionsCount}");
             featParams.EditDefinitionsCount = featParams.EditDefinitionsCount + 1;
 
-            featData.SetParameters(featParams);
+            SetParameters(featData, featParams);
 
             feature.ModifyDefinition(featData, model, null);
 

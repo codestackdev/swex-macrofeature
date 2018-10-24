@@ -43,7 +43,7 @@ namespace SolidWorks.Interop.sldworks
         /// <param name="parameters">Parameters to serialize to macro feature</param>
         /// <returns>Newly created feature</returns>
         public static IFeature InsertComFeature<TMacroFeature, TParams>(this IFeatureManager featMgr, TParams parameters)
-            where TMacroFeature : MacroFeatureEx
+            where TMacroFeature : MacroFeatureEx<TParams>
             where TParams : class, new()
         {
             return InsertComFeatureWithParameters<TMacroFeature>(featMgr, parameters);
@@ -97,9 +97,9 @@ namespace SolidWorks.Interop.sldworks
                 options = a.Flags;
             });
 
-            var baseName = MacroFeatureEx.GetBaseName<TMacroFeature>();
+            var baseName = MacroFeatureInfo.GetBaseName<TMacroFeature>();
 
-            var progId = MacroFeatureEx.GetProgId<TMacroFeature>();
+            var progId = MacroFeatureInfo.GetProgId<TMacroFeature>();
 
             if (string.IsNullOrEmpty(progId))
             {

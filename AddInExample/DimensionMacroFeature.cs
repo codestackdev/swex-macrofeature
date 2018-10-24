@@ -22,29 +22,26 @@ namespace CodeStack.SwEx.MacroFeature.Example
 
     [ComVisible(true)]
     [Icon(typeof(Resources), nameof(Resources.codestack), "CodeStack\\MacroFeatureExample\\Icons")]
-    public class DimensionMacroFeature : MacroFeatureEx
+    public class DimensionMacroFeature : MacroFeatureEx<DimensionMacroFeatureParams>
     {
-        protected override MacroFeatureRebuildResult OnRebuild(ISldWorks app, IModelDoc2 model, IFeature feature)
+        protected override MacroFeatureRebuildResult OnRebuild(ISldWorks app, IModelDoc2 model,
+            IFeature feature, DimensionMacroFeatureParams parameters)
         {
             var featData = feature.GetDefinition() as IMacroFeatureData;
-            var featParams = featData.GetParameters<DimensionMacroFeatureParams>();
-            featParams.RefCalcDimension = featParams.RefDimension * 2;
-            featData.SetParameters(featParams);
-            feature.Name = featParams.RefDimension.ToString();
-            
+            parameters.RefCalcDimension = parameters.RefDimension * 2;
+            SetParameters(featData, parameters);
+            feature.Name = parameters.RefDimension.ToString();
+
             return MacroFeatureRebuildResult.FromStatus(true);
         }
 
-        protected override void OnSetDimension(IDisplayDimension dispDim, IDimension dim, int index, double value)
+        protected override void OnSetDimensions(DimensionDataCollection dims, DimensionMacroFeatureParams parameters)
         {
-            if (index == 0)
-            {
-                dim.SetDimensionPosition(new Structs.Point(0, 0, 0), new Structs.Vector(0, 1, 0), value);
-            }
-            else if (index == 1)
-            {
-                dim.SetDimensionPosition(new Structs.Point(0, 0, 0), new Structs.Vector(0, 0, 1), value);
-            }
+            dims[0].Dimension.SetDimensionPosition(new Structs.Point(0, 0, 0), new Structs.Vector(0, 1, 0), 
+                parameters.RefDimension);
+
+            dims[1].Dimension.SetDimensionPosition(new Structs.Point(0, 0, 0), new Structs.Vector(0, 0, 1), 
+                parameters.RefCalcDimension);
         }
     }
 }

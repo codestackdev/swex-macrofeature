@@ -52,6 +52,7 @@ namespace CodeStack.SwEx.MacroFeature.Helpers
             }
         }
 
+        //TODO: remove this and unload element in the pre-notification
         private int OnDeleteItemNotify(int EntityType, string itemName)
         {
             if (EntityType == (int)swNotifyEntityType_e.swNotifyFeature)
@@ -61,7 +62,7 @@ namespace CodeStack.SwEx.MacroFeature.Helpers
                 {
                     FeatureDisposed?.Invoke(m_Model, feat);
                     m_UnloadQueue.Remove(itemName);
-                    //Marshal.FinalReleaseComObject(feat);
+                    
                     feat = null;
                     GC.Collect();
                     GC.Collect();
