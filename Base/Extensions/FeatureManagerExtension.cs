@@ -63,7 +63,8 @@ namespace SolidWorks.Interop.sldworks
             }
             else
             {
-                return InsertComFeature<TMacroFeature>(featMgr);
+                return InsertComFeatureBase<TMacroFeature>(
+                    featMgr, null, null, null, null, null, null, null);
             }
         }
 
@@ -77,17 +78,19 @@ namespace SolidWorks.Interop.sldworks
             object[] selection;
             int[] dimTypes;
             double[] dimValues;
+            IBody2[] editBodies;
 
             m_ParamsParser.Parse(parameters,
-                out paramNames, out paramTypes, out paramValues, out selection, out dimTypes, out dimValues);
+                out paramNames, out paramTypes, out paramValues, out selection,
+                out dimTypes, out dimValues, out editBodies);
             
             return InsertComFeatureBase<TMacroFeature>(featMgr, paramNames,
-                paramTypes, paramValues, dimTypes, dimValues, selection);
+                paramTypes, paramValues, dimTypes, dimValues, selection, editBodies);
         }
 
         private static IFeature InsertComFeatureBase<TMacroFeature>(this IFeatureManager featMgr,
-            string[] paramNames = null, int[] paramTypes = null, string[] paramValues = null,
-            int[] dimTypes = null, double[] dimValues = null, object[] selection = null)
+            string[] paramNames, int[] paramTypes, string[] paramValues,
+            int[] dimTypes, double[] dimValues, object[] selection, object[] editBodies)
             where TMacroFeature : MacroFeatureEx
         {
             var options = swMacroFeatureOptions_e.swMacroFeatureByDefault;
@@ -110,7 +113,7 @@ namespace SolidWorks.Interop.sldworks
 
             using (var selSet = new SelectionGroup(featMgr.Document.ISelectionManager))
             {
-                if (selection.Any())
+                if (selection != null && selection.Any())
                 {
                     var selRes = selSet.AddRange(selection);
 
@@ -119,7 +122,7 @@ namespace SolidWorks.Interop.sldworks
 
                 var res = featMgr.InsertMacroFeature3(baseName,
                     progId, null, paramNames, paramTypes,
-                    paramValues, dimTypes, dimValues, null, icons, (int)options) as IFeature;
+                    paramValues, dimTypes, dimValues, editBodies, icons, (int)options) as IFeature;
 
                 return res;
             }

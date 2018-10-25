@@ -14,7 +14,7 @@ namespace CodeStack.SwEx.MacroFeature.Example
     public class DimensionMacroFeatureParams
     {
         [ParameterDimension(swDimensionType_e.swLinearDimension, 0)]
-        public double RefDimension { get; set; }
+        public double RefDimension { get; set; } = 0.01;
 
         [ParameterDimension(swDimensionType_e.swLinearDimension, 1)]
         public double RefCalcDimension { get; set; }

@@ -12,7 +12,13 @@ using System.Text;
 
 namespace CodeStack.SwEx.MacroFeature.Attributes
 {
-    public class ParameterEditBodiesAttribute : Attribute
+    public class ParameterEditBodyAttribute : Attribute
     {
+        public int BodyIndex { get; private set; }
+
+        public ParameterEditBodyAttribute(int bodyIndex)
+        {
+            BodyIndex = bodyIndex;
+        }
     }
 }

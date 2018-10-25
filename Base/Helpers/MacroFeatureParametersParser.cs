@@ -44,6 +44,15 @@ namespace CodeStack.SwEx.MacroFeature.Helpers
                 dispDims = dispDimsObj.Cast<IDisplayDimension>().ToArray();
             }
 
+            object[] editBodiesObj = featData.EditBodies as object[];
+
+            IBody2[] editBodies = null;
+
+            if (editBodiesObj != null)
+            {
+                editBodies = editBodiesObj.Cast<IBody2>().ToArray();
+            }
+
             var paramNames = retParamNames as string[];
             var paramValues = retParamValues as string[];
             var selObjects = retSelObj as object[];
@@ -81,6 +90,18 @@ namespace CodeStack.SwEx.MacroFeature.Helpers
                             $"Dimension at index {dimInd} id not present in the macro feature");
                     }
                 },
+                (bodyInd, prp) => 
+                {
+                    if (editBodies.Length > bodyInd)
+                    {
+                        prp.SetValue(resParams, editBodies[bodyInd], null);
+                    }
+                    else
+                    {
+                        throw new IndexOutOfRangeException(
+                            $"Edit body at index {bodyInd} id not present in the macro feature");
+                    }
+                },
                 prp =>
                 {
                     var paramVal = GetParameterValue(paramNames, paramValues, prp.Name);
@@ -99,10 +120,11 @@ namespace CodeStack.SwEx.MacroFeature.Helpers
             object[] selection;
             int[] dimTypes;
             double[] dimValues;
+            IBody2[] bodies;
 
             Parse(parameters,
                 out paramNames, out paramTypes, out paramValues,
-                out selection, out dimTypes, out dimValues);
+                out selection, out dimTypes, out dimValues, out bodies);
 
             if (paramNames.Any())
             {
@@ -127,6 +149,8 @@ namespace CodeStack.SwEx.MacroFeature.Helpers
                         featData.CurrentConfiguration.Name);
                 }
             }
+
+            featData.EditBodies = bodies;
         }
 
         private void SetAndReleaseDimension(IDisplayDimension dispDim,
@@ -151,14 +175,16 @@ namespace CodeStack.SwEx.MacroFeature.Helpers
         internal void Parse(object parameters,
             out string[] paramNames, out int[] paramTypes,
             out string[] paramValues, out object[] selection,
-            out int[] dimTypes, out double[] dimValues)
+            out int[] dimTypes, out double[] dimValues, out IBody2[] editBodies)
         {
             var paramNamesList = new List<string>();
             var paramTypesList = new List<int>();
             var paramValuesList = new List<string>();
             var selectionList = new Dictionary<int, object>();
             var dimsList = new Dictionary<int, Tuple<swDimensionType_e, double>>();
-            
+
+            var editBodiesList = new Dictionary<int, IBody2>();
+
             TraverseParametersDefinition(parameters.GetType(),
                 (selIndex, prp) =>
                 {
@@ -184,6 +210,10 @@ namespace CodeStack.SwEx.MacroFeature.Helpers
                 {
                     var val = Convert.ToDouble(prp.GetValue(parameters, null));
                     dimsList.Add(dimInd, new Tuple<swDimensionType_e, double>(dimType, val));
+                },
+                (bodyInd, prp) => 
+                {
+                    editBodiesList.Add(bodyInd, prp.GetValue(parameters, null) as IBody2);
                 },
                 prp =>
                 {
@@ -228,6 +258,13 @@ namespace CodeStack.SwEx.MacroFeature.Helpers
 
             dimTypes = dimsList.OrderBy(d => d.Key).Select(d => (int)d.Value.Item1).ToArray();
             dimValues = dimsList.OrderBy(d => d.Key).Select(d => d.Value.Item2).ToArray();
+
+            if (!IsConsecutive(editBodiesList.Keys))
+            {
+                throw new InvalidOperationException("Edit bodies elements indices are not consecutive");
+            }
+
+            editBodies = editBodiesList.OrderBy(d => d.Key).Select(d => d.Value).ToArray();
         }
 
         private static bool IsConsecutive(IEnumerable<int> selectionList)
@@ -240,6 +277,7 @@ namespace CodeStack.SwEx.MacroFeature.Helpers
         private void TraverseParametersDefinition(Type paramsType,
             Action<int, PropertyInfo> selParamHandler,
             Action<int, swDimensionType_e, PropertyInfo> dimParamHandler,
+            Action<int, PropertyInfo> editBodyHandler,
             Action<PropertyInfo> dataParamHandler)
         {
             foreach (var prp in paramsType.GetProperties())
@@ -248,6 +286,7 @@ namespace CodeStack.SwEx.MacroFeature.Helpers
 
                 var selAtt = prp.TryGetAttribute<ParameterSelectionAttribute>();
                 var dimAtt = prp.TryGetAttribute<ParameterDimensionAttribute>();
+                var editBodyAtt = prp.TryGetAttribute<ParameterEditBodyAttribute>();
 
                 if (selAtt != null)
                 {
@@ -260,6 +299,11 @@ namespace CodeStack.SwEx.MacroFeature.Helpers
                     var dimType = dimAtt.DimensionType;
                     var dimInd = dimAtt.DimensionIndex;
                     dimParamHandler.Invoke(dimInd, dimType, prp);
+                }
+                else if (editBodyAtt != null)
+                {
+                    var bodyInd = editBodyAtt.BodyIndex;
+                    editBodyHandler.Invoke(bodyInd, prp);
                 }
                 else
                 {

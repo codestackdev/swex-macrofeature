@@ -61,7 +61,7 @@
     <Compile Include="Attributes\IconAttribute.cs" />
     <Compile Include="Attributes\OptionsAttribute.cs" />
     <Compile Include="Attributes\ParameterDimensionAttribute.cs" />
-    <Compile Include="Attributes\ParameterEditBodiesAttribute.cs" />
+    <Compile Include="Attributes\ParameterEditBodyAttribute.cs" />
     <Compile Include="Attributes\ParameterSelectionAttribute.cs" />
     <Compile Include="Base\IMacroFeatureHandler.cs" />
     <Compile Include="Base\MacroFeatureRebuildBodyResult.cs" />

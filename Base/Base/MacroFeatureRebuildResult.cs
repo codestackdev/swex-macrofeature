@@ -20,6 +20,11 @@ namespace CodeStack.SwEx.MacroFeature.Base
             return new MacroFeatureRebuildBodyResult(body);
         }
 
+        public static MacroFeatureRebuildResult FromBody(IBody2 body, IMacroFeatureData featData, bool updateEntityIds = true)
+        {
+            return new MacroFeatureRebuildBodyResult(body, featData, updateEntityIds);
+        }
+        
         public static MacroFeatureRebuildResult FromPattern(IBody2[] bodiesPattern)
         {
             return new MacroFeatureRebuildPatternResult(bodiesPattern);

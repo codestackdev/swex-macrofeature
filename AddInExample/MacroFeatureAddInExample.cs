@@ -30,7 +30,9 @@ namespace CodeStack.SwEx.MacroFeature.Example
         public const int CMD_GRP_ID = 0;
         public const int CMD_CreateParamsMacroFeature = 1;
         public const int CMD_DimensionMacroFeature = 2;
-
+        public const int CMD_GeometryMacroFeature = 3;
+        public const int CMD_BoundingCylinderMacroFeature = 4;
+        
         #region SolidWorks Registration
 
         [ComRegisterFunction]
@@ -114,14 +116,23 @@ namespace CodeStack.SwEx.MacroFeature.Example
                     EditDefinitionsCount = 0
                 });
         }
-
-
+        
         public void CreateDimensionMacroFeature()
         {
-            m_App.IActiveDoc2.FeatureManager.InsertComFeature<DimensionMacroFeature, DimensionMacroFeatureParams>(
-                new DimensionMacroFeatureParams()
+            m_App.IActiveDoc2.FeatureManager.InsertComFeature<DimensionMacroFeature>();
+        }
+
+        public void CreateGeometryMacroFeature()
+        {
+            m_App.IActiveDoc2.FeatureManager.InsertComFeature<GeometryMacroFeature>();
+        }
+
+        public void CreateBoundingCylinderMacroFeature()
+        {
+            m_App.IActiveDoc2.FeatureManager.InsertComFeature<BoundingCylinderMacroFeature, BoundingCylinderMacroFeatureParams>(
+                new BoundingCylinderMacroFeatureParams()
                 {
-                    RefDimension = 0.01
+                    InputBody = m_App.IActiveDoc2.ISelectionManager.GetSelectedObject6(1, -1) as IBody2
                 });
         }
 
@@ -159,7 +170,9 @@ namespace CodeStack.SwEx.MacroFeature.Example
             var knownIDs = new int[] 
             {
                 CMD_CreateParamsMacroFeature,
-                CMD_CreateParamsMacroFeature
+                CMD_DimensionMacroFeature,
+                CMD_GeometryMacroFeature,
+                CMD_BoundingCylinderMacroFeature
             };
 
             if (getDataResult)
@@ -187,6 +200,16 @@ namespace CodeStack.SwEx.MacroFeature.Example
                 "Creates sample macro feature with dimensions",
                 nameof(CreateDimensionMacroFeature), 0, nameof(CreateDimensionMacroFeature),
                 "", CMD_DimensionMacroFeature, menuToolbarOption);
+
+            cmdGroup.AddCommandItem2(nameof(CreateGeometryMacroFeature), -1,
+                "Creates sample macro feature with geometry",
+                nameof(CreateGeometryMacroFeature), 0, nameof(CreateGeometryMacroFeature),
+                "", CMD_GeometryMacroFeature, menuToolbarOption);
+
+            cmdGroup.AddCommandItem2(nameof(CreateBoundingCylinderMacroFeature), -1,
+                "Creates sample macro feature with bounding cylinder",
+                nameof(CreateBoundingCylinderMacroFeature), 0, nameof(CreateBoundingCylinderMacroFeature),
+                "", CMD_BoundingCylinderMacroFeature, menuToolbarOption);
 
             cmdGroup.HasToolbar = true;
             cmdGroup.HasMenu = true;
