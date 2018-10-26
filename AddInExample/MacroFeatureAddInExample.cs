@@ -129,11 +129,20 @@ namespace CodeStack.SwEx.MacroFeature.Example
 
         public void CreateBoundingCylinderMacroFeature()
         {
-            m_App.IActiveDoc2.FeatureManager.InsertComFeature<BoundingCylinderMacroFeature, BoundingCylinderMacroFeatureParams>(
-                new BoundingCylinderMacroFeatureParams()
-                {
-                    InputBody = m_App.IActiveDoc2.ISelectionManager.GetSelectedObject6(1, -1) as IBody2
-                });
+            var body = m_App.IActiveDoc2.ISelectionManager.GetSelectedObject6(1, -1) as IBody2;
+
+            if (body != null)
+            {
+                m_App.IActiveDoc2.FeatureManager.InsertComFeature<BoundingCylinderMacroFeature, BoundingCylinderMacroFeatureParams>(
+                    new BoundingCylinderMacroFeatureParams()
+                    {
+                        InputBody = body
+                    });
+            }
+            else
+            {
+                m_App.SendMsgToUser("Please select solid body");
+            }
         }
 
         public bool DisconnectFromSW()

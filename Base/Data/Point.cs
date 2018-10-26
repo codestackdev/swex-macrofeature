@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace CodeStack.SwEx.MacroFeature.Structs
+namespace CodeStack.SwEx.MacroFeature.Data
 {
     public class Point
     {
@@ -53,6 +53,16 @@ namespace CodeStack.SwEx.MacroFeature.Structs
         public bool IsSame(double x, double y, double z)
         {
             return X == x && Y == y && Z == z;
+        }
+
+        public static Vector operator -(Point pt1, Point pt2)
+        {
+            return new Vector(pt2.X - pt1.X, pt2.Y - pt1.Y, pt2.Z - pt1.Z);
+        }
+
+        public override string ToString()
+        {
+            return $"{X};{Y};{Z}";
         }
     }
 }

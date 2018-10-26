@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace CodeStack.SwEx.MacroFeature.Structs
+namespace CodeStack.SwEx.MacroFeature.Data
 {
     public class Vector : Point
     {

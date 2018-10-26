@@ -5,7 +5,7 @@ using System.Text;
 
 namespace SolidWorks.Interop.sldworks
 {
-    internal static class SldWorksExtension
+    internal static class SldWorksEx
     {
         internal static bool SupportsHighResIcons(this ISldWorks app)
         {

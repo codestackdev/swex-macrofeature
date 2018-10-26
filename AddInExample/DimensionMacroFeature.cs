@@ -8,6 +8,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using CodeStack.SwEx.MacroFeature.Base;
+using CodeStack.SwEx.MacroFeature.Data;
 
 namespace CodeStack.SwEx.MacroFeature.Example
 {
@@ -37,10 +38,10 @@ namespace CodeStack.SwEx.MacroFeature.Example
 
         protected override void OnSetDimensions(DimensionDataCollection dims, DimensionMacroFeatureParams parameters)
         {
-            dims[0].Dimension.SetDimensionPosition(new Structs.Point(0, 0, 0), new Structs.Vector(0, 1, 0), 
+            dims[0].Dimension.SetDirection(new Point(0, 0, 0), new Vector(0, 1, 0), 
                 parameters.RefDimension);
 
-            dims[1].Dimension.SetDimensionPosition(new Structs.Point(0, 0, 0), new Structs.Vector(0, 0, 1), 
+            dims[1].Dimension.SetDirection(new Point(0, 0, 0), new Vector(0, 0, 1), 
                 parameters.RefCalcDimension);
         }
     }

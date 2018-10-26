@@ -68,10 +68,11 @@
     <Compile Include="Base\MacroFeatureRebuildPatternResult.cs" />
     <Compile Include="Base\MacroFeatureRebuildResult.cs" />
     <Compile Include="Base\MacroFeatureRebuldStatusResult.cs" />
-    <Compile Include="Extensions\SldWorksExtension.cs" />
+    <Compile Include="Extensions\ModelerEx.cs" />
+    <Compile Include="Extensions\SldWorksEx.cs" />
     <Compile Include="Helpers\Context.cs" />
-    <Compile Include="Extensions\DimensionExtension.cs" />
-    <Compile Include="Extensions\FeatureManagerExtension.cs" />
+    <Compile Include="Extensions\DimensionEx.cs" />
+    <Compile Include="Extensions\FeatureManagerEx.cs" />
     <Compile Include="Helpers\MacroFeatureInfo.cs" />
     <Compile Include="Helpers\MacroFeatureLifecycleManager.cs" />
     <Compile Include="Helpers\MacroFeatureRegister.cs" />
@@ -83,8 +84,8 @@
     <Compile Include="Icons\MasterIcon.cs" />
     <Compile Include="MacroFeatureEx.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Structs\Point.cs" />
-    <Compile Include="Structs\Vector.cs" />
+    <Compile Include="Data\Point.cs" />
+    <Compile Include="Data\Vector.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

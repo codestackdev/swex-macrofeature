@@ -8,6 +8,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using CodeStack.SwEx.MacroFeature.Base;
 using SolidWorks.Interop.swconst;
+using CodeStack.SwEx.MacroFeature.Data;
 
 namespace CodeStack.SwEx.MacroFeature.Example
 {
@@ -31,17 +32,12 @@ namespace CodeStack.SwEx.MacroFeature.Example
 
             var box = parameters.InputBody.GetBodyBox() as double[];
 
-            var center = new double[] { (box[0] + box[3]) / 2, box[1], (box[2] + box[5]) / 2 };
-            var axis = new double[] { 0, 1, 0 };
+            var center = new Point ((box[0] + box[3]) / 2, box[1], (box[2] + box[5]) / 2);
+            var axis = new Vector(0, 1, 0);
             var radius = (box[3] - box[0]) / 2;
             var height = box[4] - box[1];
 
-            var cyl = modeler.CreateBodyFromCyl(new double[]
-            {
-                center[0], center[1], center[2],
-                axis[0], axis[1], axis[2],
-                radius, height
-            }) as IBody2;
+            var cyl = modeler.CreateCylinder(center, axis, radius, height);
 
             return MacroFeatureRebuildResult.FromBody(cyl, feature.GetDefinition() as IMacroFeatureData);
         }
