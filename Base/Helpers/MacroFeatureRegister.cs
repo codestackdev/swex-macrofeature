@@ -9,41 +9,29 @@ using System.Text;
 
 namespace CodeStack.SwEx.MacroFeature.Helpers
 {
-    internal class MacroFeatureRegister : IDisposable
+    internal class MacroFeatureRegister<THandler> : IDisposable
+        where THandler : class, IMacroFeatureHandler, new()
     {
         private class ModelDictionary : Dictionary<IModelDoc2, MacroFeatureDictionary>
         {
         }
 
-        private class MacroFeatureDictionary : Dictionary<IFeature, IMacroFeatureHandler>
+        private class MacroFeatureDictionary : Dictionary<IFeature, THandler>
         {
         }
 
         private readonly ModelDictionary m_Register;
         private readonly Dictionary<IModelDoc2, MacroFeatureLifecycleManager> m_LifecycleManagers;
         private readonly string m_BaseName;
-
-        private readonly Type m_HandlerType;
-
-        internal MacroFeatureRegister(string baseName, Type handlerType)
+        
+        internal MacroFeatureRegister(string baseName)
         {           
-            if(!typeof(IMacroFeatureHandler).IsAssignableFrom(handlerType))
-            {
-                throw new InvalidCastException($"{handlerType.FullName} must implement {typeof(IMacroFeatureHandler).FullName}");
-            }
-
-            if (handlerType.GetConstructor(Type.EmptyTypes) == null)
-            {
-                throw new InvalidOperationException($"{handlerType.FullName} doesn't have a parameterless constructor");
-            }
-
-            m_HandlerType = handlerType;
             m_BaseName = baseName;
             m_Register = new ModelDictionary();
             m_LifecycleManagers = new Dictionary<IModelDoc2, MacroFeatureLifecycleManager>();
         }
 
-        internal IMacroFeatureHandler EnsureFeatureRegistered(ISldWorks app, IModelDoc2 model, IFeature feat, out bool isNew)
+        internal THandler EnsureFeatureRegistered(ISldWorks app, IModelDoc2 model, IFeature feat, out bool isNew)
         {
             isNew = false;
 
@@ -60,10 +48,10 @@ namespace CodeStack.SwEx.MacroFeature.Helpers
                 m_LifecycleManagers.Add(model, lcm);
             }
 
-            IMacroFeatureHandler handler = null;
+            THandler handler = null;
             if (!featsDict.TryGetValue(feat, out handler))
             {
-                handler = Activator.CreateInstance(m_HandlerType) as IMacroFeatureHandler;
+                handler = new THandler();
                 featsDict.Add(feat, handler);
                 handler.Init(app, model, feat);
                 isNew = true;
@@ -118,7 +106,7 @@ namespace CodeStack.SwEx.MacroFeature.Helpers
 
             if (m_Register.TryGetValue(model, out modelDict))
             {
-                IMacroFeatureHandler handler;
+                THandler handler;
 
                 if (modelDict.TryGetValue(feat, out handler))
                 {

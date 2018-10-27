@@ -1,7 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 namespace CodeStack.SwEx.MacroFeature.Data
 {
@@ -15,6 +12,10 @@ namespace CodeStack.SwEx.MacroFeature.Data
         {
         }
 
+        public Vector(Vector vec) : base(vec.X, vec.Y, vec.Z)
+        {
+        }
+
         public bool IsSame(Vector vec, bool normilize = true)
         {
             if (vec == null)
@@ -24,11 +25,8 @@ namespace CodeStack.SwEx.MacroFeature.Data
 
             if (normilize)
             {
-                var thisLen = GetLength();
-                var thisNorm = new Vector(X / thisLen, Y / thisLen, Z / thisLen);
-
-                var otherLen = vec.GetLength();
-                var otherNorm = new Vector(vec.X / otherLen, vec.Y / otherLen, vec.Z / otherLen);
+                var thisNorm = this.Normalize();
+                var otherNorm = vec.Normalize();
 
                 return thisNorm.IsSame(otherNorm.X, otherNorm.Y, otherNorm.Z)
                     || thisNorm.IsSame(-otherNorm.X, -otherNorm.Y, -otherNorm.Z);
@@ -39,7 +37,23 @@ namespace CodeStack.SwEx.MacroFeature.Data
             }
         }
 
-        private double GetLength()
+        public Vector Normalize()
+        {
+            var thisLen = GetLength();
+            var thisNorm = new Vector(X / thisLen, Y / thisLen, Z / thisLen);
+            return thisNorm;
+        }
+
+        public Vector Cross(Vector vector)
+        {
+            var x = Y * vector.Z - vector.Y * Z; ;
+            var y = (X * vector.Z - vector.X * Z) * -1;
+            var z = X * vector.Y - vector.X * Y;
+
+            return new Vector(x, y, z);
+        }
+
+        public double GetLength()
         {
             return Math.Sqrt(Math.Pow(X, 2)
                 + Math.Pow(Y, 2)

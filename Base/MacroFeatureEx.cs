@@ -26,25 +26,11 @@ using System.Text;
 namespace CodeStack.SwEx.MacroFeature
 {
     public abstract class MacroFeatureEx : ISwComFeature
-    {
-        private class DefaultMacroFeatureHandler : IMacroFeatureHandler
-        {
-            public void Init(ISldWorks app, IModelDoc2 model, IFeature feat)
-            {
-            }
-
-            public void Unload()
-            {
-            }
-        }
-
-        private MacroFeatureRegister m_Register;
-
+    {       
         #region Initiation
 
         public MacroFeatureEx()
-        {
-            m_Register = new MacroFeatureRegister(MacroFeatureInfo.GetBaseName(this.GetType()), MacroFeatureHandlerType);
+        {   
             TryCreateIcons();
         }
         
@@ -94,17 +80,6 @@ namespace CodeStack.SwEx.MacroFeature
             }
         }
 
-        private void InitAndValidateFeature(ISldWorks app, IModelDoc2 model, IFeature feat, bool validateIcons = false)
-        {
-            bool isNew = true;
-            var handler = m_Register.EnsureFeatureRegistered(app, model, feat, out isNew);
-
-            //if (validateIcons && isNew)
-            //{
-            //    UpdateIconsIfRequired(model, feat);
-            //}
-        }
-
         //this method crashes SOLIDWORKS - need to research
         private void UpdateIconsIfRequired(ISldWorks app, IModelDoc2 model, IFeature feat)
         {
@@ -149,10 +124,7 @@ namespace CodeStack.SwEx.MacroFeature
 
         [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
         public object Regenerate(object app, object modelDoc, object feature)
-        {
-            InitAndValidateFeature(app as ISldWorks, modelDoc as IModelDoc2,
-                feature as IFeature);
-            
+        {            
             var res = OnRebuild(app as ISldWorks, modelDoc as IModelDoc2, feature as IFeature);
             
             if (res != null)
@@ -168,9 +140,6 @@ namespace CodeStack.SwEx.MacroFeature
         [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
         public object Security(object app, object modelDoc, object feature)
         {
-            InitAndValidateFeature(app as ISldWorks, modelDoc as IModelDoc2,
-                feature as IFeature, true);
-
             return OnUpdateState(app as ISldWorks, modelDoc as IModelDoc2, feature as IFeature);
         }
 
@@ -189,15 +158,6 @@ namespace CodeStack.SwEx.MacroFeature
         protected virtual swMacroFeatureSecurityOptions_e OnUpdateState(ISldWorks app, IModelDoc2 model, IFeature feature)
         {
             return swMacroFeatureSecurityOptions_e.swMacroFeatureSecurityByDefault;
-        }
-
-        [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
-        protected virtual Type MacroFeatureHandlerType
-        {
-            get
-            {
-                return typeof(DefaultMacroFeatureHandler);
-            }
         }
     }
 
@@ -273,7 +233,7 @@ namespace CodeStack.SwEx.MacroFeature
 
             var res = OnRebuild(app, model, feature, parameters);
 
-            UpdateDimensions(featDef, parameters);
+            UpdateDimensions(app, model, feature, featDef, parameters);
 
             return res;
         }
@@ -283,17 +243,20 @@ namespace CodeStack.SwEx.MacroFeature
             return null;
         }
 
-        private void UpdateDimensions(IMacroFeatureData featData, TParams parameters)
+        private void UpdateDimensions(ISldWorks app, IModelDoc2 model, IFeature feature,
+            IMacroFeatureData featData, TParams parameters)
         {
             using (var dimsColl = new DimensionDataCollection(featData))
             {
                 if (dimsColl.Any())
                 {
-                    OnSetDimensions(dimsColl, parameters);
+                    OnSetDimensions(app, model, feature, dimsColl, parameters);
                 }
             }
         }
-        protected virtual void OnSetDimensions(DimensionDataCollection dims, TParams parameters)
+
+        protected virtual void OnSetDimensions(ISldWorks app, IModelDoc2 model, IFeature feature, 
+            DimensionDataCollection dims, TParams parameters)
         {
         }
 
@@ -312,19 +275,51 @@ namespace CodeStack.SwEx.MacroFeature
         where THandler : class, IMacroFeatureHandler, new()
         where TParams : class, new()
     {
-        //private Dictionary<IMacroFeatureData, THandler> m_Handlers;
+        private MacroFeatureRegister<THandler> m_Register;
 
-        //protected virtual void OnLoad(THandler handler)
-        //{
-        //}
+        public MacroFeatureEx() : base()
+        {
+            m_Register = new MacroFeatureRegister<THandler>(MacroFeatureInfo.GetBaseName(this.GetType()));
+        }
 
         [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
-        protected override Type MacroFeatureHandlerType
+        protected override sealed bool OnEditDefinition(ISldWorks app, IModelDoc2 model, IFeature feature)
         {
-            get
-            {
-                return typeof(THandler);
-            }
+            return OnEditDefinition(GetHandler(app, model, feature));
+        }
+
+        [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
+        protected override sealed swMacroFeatureSecurityOptions_e OnUpdateState(ISldWorks app, IModelDoc2 model, IFeature feature)
+        {
+            return OnUpdateState(GetHandler(app, model, feature));
+        }
+
+        [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
+        protected override sealed MacroFeatureRebuildResult OnRebuild(ISldWorks app, IModelDoc2 model, IFeature feature, TParams parameters)
+        {
+            return OnRebuild(GetHandler(app, model, feature), parameters);
+        }
+
+        protected virtual swMacroFeatureSecurityOptions_e OnUpdateState(THandler handler)
+        {
+            return swMacroFeatureSecurityOptions_e.swMacroFeatureSecurityByDefault;
+        }
+
+        protected virtual MacroFeatureRebuildResult OnRebuild(THandler handler, TParams parameters)
+        {
+            return null;
+        }
+
+        protected virtual bool OnEditDefinition(THandler handler)
+        {
+            return true;
+        }
+
+        private THandler GetHandler(ISldWorks app, IModelDoc2 model, IFeature feature)
+        {
+            bool isNew = true;
+            var handler = m_Register.EnsureFeatureRegistered(app, model, feature, out isNew);
+            return handler;
         }
     }
 }

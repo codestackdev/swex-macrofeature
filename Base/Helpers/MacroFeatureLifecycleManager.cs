@@ -52,12 +52,12 @@ namespace CodeStack.SwEx.MacroFeature.Helpers
             }
         }
 
-        //TODO: remove this and unload element in the pre-notification
         private int OnDeleteItemNotify(int EntityType, string itemName)
         {
             if (EntityType == (int)swNotifyEntityType_e.swNotifyFeature)
             {
                 IFeature feat;
+
                 if (m_UnloadQueue.TryGetValue(itemName, out feat))
                 {
                     FeatureDisposed?.Invoke(m_Model, feat);
@@ -73,32 +73,19 @@ namespace CodeStack.SwEx.MacroFeature.Helpers
             return 0;
         }
 
-        private int OnDeleteItemPreNotify(int EntityType, string itemName)
+        private int OnDeleteItemPreNotify(int entityType, string itemName)
         {
-            if (EntityType == (int)swNotifyEntityType_e.swNotifyFeature)
-            {
-                var feat = GetFeatureByName(itemName);
+            IFeature feat;
 
-                if (feat != null)
+            if (TryGetMacroFeature(entityType, itemName, out feat))
+            {
+                if (!m_UnloadQueue.ContainsKey(itemName))
                 {
-                    if (feat.GetTypeName2() == "MacroFeature")
-                    {
-                        if ((feat.GetDefinition() as IMacroFeatureData).GetBaseName() == m_MacroFeatBaseName)
-                        {
-                            if (!m_UnloadQueue.ContainsKey(itemName))
-                            {
-                                m_UnloadQueue.Add(itemName, feat);
-                            }
-                            else
-                            {
-                                Debug.Assert(false, "DeleteItemNotify is not called after DeleteItemPreNotify");
-                            }
-                        }
-                    }
+                    m_UnloadQueue.Add(itemName, feat);
                 }
                 else
                 {
-                    Debug.Assert(false, "Feature name supplied by DeleteItemPreNotify doesn't exist");
+                    Debug.Assert(false, "DeleteItemNotify is not called after DeleteItemPreNotify");
                 }
             }
 
@@ -180,9 +167,7 @@ namespace CodeStack.SwEx.MacroFeature.Helpers
             ModelDisposed?.Invoke(m_Model);
             DetachEvents();
 
-            //Marshal.FinalReleaseComObject(m_Model);
             m_Model = null;
-            //m_UnloadQueue.Values.ToList().ForEach(f => Marshal.FinalReleaseComObject(f));
             m_UnloadQueue.Clear();
             GC.Collect();
             GC.Collect();

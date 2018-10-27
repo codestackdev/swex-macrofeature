@@ -32,7 +32,8 @@ namespace CodeStack.SwEx.MacroFeature.Example
         public const int CMD_DimensionMacroFeature = 2;
         public const int CMD_GeometryMacroFeature = 3;
         public const int CMD_BoundingCylinderMacroFeature = 4;
-        
+        public const int CMD_LifecycleMacroFeature = 5;
+
         #region SolidWorks Registration
 
         [ComRegisterFunction]
@@ -127,6 +128,11 @@ namespace CodeStack.SwEx.MacroFeature.Example
             m_App.IActiveDoc2.FeatureManager.InsertComFeature<GeometryMacroFeature>();
         }
 
+        public void CreateLifecycleMacroFeature()
+        {
+            m_App.IActiveDoc2.FeatureManager.InsertComFeature<LifecycleMacroFeature>();
+        }
+        
         public void CreateBoundingCylinderMacroFeature()
         {
             var body = m_App.IActiveDoc2.ISelectionManager.GetSelectedObject6(1, -1) as IBody2;
@@ -181,7 +187,8 @@ namespace CodeStack.SwEx.MacroFeature.Example
                 CMD_CreateParamsMacroFeature,
                 CMD_DimensionMacroFeature,
                 CMD_GeometryMacroFeature,
-                CMD_BoundingCylinderMacroFeature
+                CMD_BoundingCylinderMacroFeature,
+                CMD_LifecycleMacroFeature
             };
 
             if (getDataResult)
@@ -219,6 +226,11 @@ namespace CodeStack.SwEx.MacroFeature.Example
                 "Creates sample macro feature with bounding cylinder",
                 nameof(CreateBoundingCylinderMacroFeature), 0, nameof(CreateBoundingCylinderMacroFeature),
                 "", CMD_BoundingCylinderMacroFeature, menuToolbarOption);
+
+            cmdGroup.AddCommandItem2(nameof(CreateLifecycleMacroFeature), -1,
+                "Creates sample macro feature with lifecycle management",
+                nameof(CreateLifecycleMacroFeature), 0, nameof(CreateLifecycleMacroFeature),
+                "", CMD_LifecycleMacroFeature, menuToolbarOption);
 
             cmdGroup.HasToolbar = true;
             cmdGroup.HasMenu = true;

@@ -21,7 +21,7 @@ namespace SolidWorks.Interop.sldworks
         {
             var dimDirVec = m_MathUtils.CreateVector(dir.ToArray()) as MathVector;
             var startPt = m_MathUtils.CreatePoint(originPt.ToArray()) as IMathPoint;
-            var endPt = MovePoint(startPt, dimDirVec, length);
+            var endPt = m_MathUtils.CreatePoint(originPt.Move(dir, length).ToArray()) as IMathPoint;
 
             var refPts = new IMathPoint[] 
             {
@@ -46,13 +46,6 @@ namespace SolidWorks.Interop.sldworks
             dim.DimensionLineDirection = dimDirVec;
             dim.ExtensionLineDirection = extDirVec;
             dim.ReferencePoints = refPts;
-        }
-
-        private static IMathPoint MovePoint(IMathPoint pt, MathVector dir, double dist)
-        {
-            var moveVec = dir.Normalise().Scale(dist);
-
-            return pt.AddVector(moveVec) as IMathPoint;
         }
     }
 }

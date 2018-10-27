@@ -22,17 +22,15 @@ namespace SolidWorks.Interop.sldworks
             IMathVector refVec;
             var surf = CreatePlanarSurface(modeler, center, dir, out refVec);
 
-            var xVec = refVec.Normalise();
-            var zVec = m_MathUtils.CreateVector(dir.ToArray()) as MathVector;
-            var yVec = xVec.ICross(zVec).Normalise();
-            var rootPt = m_MathUtils.CreatePoint(center.ToArray()) as IMathPoint;
-
+            var xVec = new Vector(refVec.ArrayData as double[]);
+            var yVec = xVec.Cross(dir);
+            
             var getPointFunc = new Func<double, double, Point>(
                 (x, y) =>
                 {
-                    var mathPt = rootPt.IAddVector(xVec.IScale(x));
-                    mathPt = mathPt.IAddVector(yVec.IScale(y));
-                    return new Point(mathPt.ArrayData as double[]);
+                    var pt = center.Move(xVec, x);
+                    pt = pt.Move(yVec, y);
+                    return pt;
                 });
 
             var corners = new Point[]
@@ -58,6 +56,8 @@ namespace SolidWorks.Interop.sldworks
                 createCurveFunc.Invoke(corners[3], corners[0])
             };
 
+            var zVec = m_MathUtils.CreateVector(dir.ToArray()) as MathVector;
+
             return Extrude(modeler, surf, curves, zVec, height);
         }
         
@@ -66,11 +66,11 @@ namespace SolidWorks.Interop.sldworks
             IMathVector refVec;
             var surf = CreatePlanarSurface(modeler, center, axis, out refVec);
 
-            var refPt = (m_MathUtils.CreatePoint(center.ToArray()) as IMathPoint).IAddVector(refVec.Normalise().IScale(radius));
-            var refPtData = refPt.ArrayData as double[];
-
-            var arc = modeler.CreateArc(center.ToArray(), axis.ToArray(), radius, refPt.ArrayData, refPt.ArrayData) as ICurve;
-            arc = arc.CreateTrimmedCurve2(refPtData[0], refPtData[1], refPtData[2], refPtData[0], refPtData[1], refPtData[2]);
+            var radDir = new Vector(refVec.ArrayData as double[]);
+            var refPt = center.Move(radDir, radius);
+            
+            var arc = modeler.CreateArc(center.ToArray(), axis.ToArray(), radius, refPt.ToArray(), refPt.ToArray()) as ICurve;
+            arc = arc.CreateTrimmedCurve2(refPt.X, refPt.Y, refPt.Z, refPt.X, refPt.Y, refPt.Z);
 
             var dir = m_MathUtils.CreateVector(axis.ToArray()) as MathVector;
 

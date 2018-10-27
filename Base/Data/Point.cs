@@ -60,6 +60,25 @@ namespace CodeStack.SwEx.MacroFeature.Data
             return new Vector(pt2.X - pt1.X, pt2.Y - pt1.Y, pt2.Z - pt1.Z);
         }
 
+        public static Point operator +(Point pt, Vector vec)
+        {
+            return new Point(pt.X + vec.X, pt.Y + vec.Y, pt.Z + vec.Z);
+        }
+
+        public Point Move(Vector dir, double dist)
+        {
+            var moveVec = dir.Normalize();
+            moveVec.Scale(dist);
+            return this + moveVec;
+        }
+
+        public void Scale(double scalar)
+        {
+            X *= scalar;
+            Y *= scalar;
+            Z *= scalar;
+        }
+
         public override string ToString()
         {
             return $"{X};{Y};{Z}";
