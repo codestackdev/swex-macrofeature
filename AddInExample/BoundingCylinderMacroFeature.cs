@@ -73,7 +73,7 @@ namespace CodeStack.SwEx.MacroFeature.Example
             return MacroFeatureRebuildResult.FromBody(cyl, feature.GetDefinition() as IMacroFeatureData);
         }
 
-        protected override void OnSetDimensions(DimensionDataCollection dims, BoundingCylinderMacroFeatureParams parameters)
+        protected override void OnSetDimensions(ISldWorks app, IModelDoc2 model, IFeature feature, DimensionDataCollection dims, BoundingCylinderMacroFeatureParams parameters)
         {
             Point center;
             Vector axis;

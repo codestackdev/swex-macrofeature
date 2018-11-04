@@ -36,12 +36,12 @@ namespace CodeStack.SwEx.MacroFeature.Example
             return MacroFeatureRebuildResult.FromStatus(true);
         }
 
-        protected override void OnSetDimensions(DimensionDataCollection dims, DimensionMacroFeatureParams parameters)
+        protected override void OnSetDimensions(ISldWorks app, IModelDoc2 model, IFeature feature, DimensionDataCollection dims, DimensionMacroFeatureParams parameters)
         {
-            dims[0].Dimension.SetDirection(new Point(0, 0, 0), new Vector(0, 1, 0), 
+            dims[0].Dimension.SetDirection(new Point(0, 0, 0), new Vector(0, 1, 0),
                 parameters.RefDimension);
 
-            dims[1].Dimension.SetDirection(new Point(0, 0, 0), new Vector(0, 0, 1), 
+            dims[1].Dimension.SetDirection(new Point(0, 0, 0), new Vector(0, 0, 1),
                 parameters.RefCalcDimension);
         }
     }
