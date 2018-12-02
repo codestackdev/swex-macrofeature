@@ -177,8 +177,16 @@ namespace CodeStack.SwEx.MacroFeature
 
             public void Dispose()
             {
-                Marshal.ReleaseComObject(Dimension);
-                Marshal.ReleaseComObject(DisplayDimension);
+                if (Marshal.IsComObject(Dimension))
+                {
+                    Marshal.ReleaseComObject(Dimension);
+                }
+
+                if (Marshal.IsComObject(DisplayDimension))
+                {
+                    Marshal.ReleaseComObject(DisplayDimension);
+                }
+
                 Dimension = null;
                 DisplayDimension = null;
             }
@@ -186,17 +194,14 @@ namespace CodeStack.SwEx.MacroFeature
 
         protected class DimensionDataCollection : ReadOnlyCollection<DimensionData>, IDisposable
         {
-            internal DimensionDataCollection(IMacroFeatureData featData)
+            internal DimensionDataCollection(IDisplayDimension[] dispDims)
                 : base(new List<DimensionData>())
             {
-                var dispDims = featData.GetDisplayDimensions() as object[];
-
                 if (dispDims != null)
                 {
                     for (int i = 0; i < dispDims.Length; i++)
                     {
                         this.Items.Add(new DimensionData(dispDims[i] as IDisplayDimension));
-                        dispDims[i] = 0;
                     }
                 }
             }
@@ -229,11 +234,20 @@ namespace CodeStack.SwEx.MacroFeature
         {
             var featDef = feature.GetDefinition() as IMacroFeatureData;
 
-            var parameters = GetParameters(featDef);
+            IDisplayDimension[] dispDims;
+            var parameters = GetParameters(feature, model, out dispDims);
 
             var res = OnRebuild(app, model, feature, parameters);
 
-            UpdateDimensions(app, model, feature, featDef, parameters);
+            UpdateDimensions(app, model, feature, dispDims, parameters);
+
+            if (dispDims != null)
+            {
+                for (int i = 0; i < dispDims.Length; i++)
+                {
+                    dispDims[i] = null;
+                }
+            }
 
             return res;
         }
@@ -244,9 +258,9 @@ namespace CodeStack.SwEx.MacroFeature
         }
 
         private void UpdateDimensions(ISldWorks app, IModelDoc2 model, IFeature feature,
-            IMacroFeatureData featData, TParams parameters)
+            IDisplayDimension[] dispDims, TParams parameters)
         {
-            using (var dimsColl = new DimensionDataCollection(featData))
+            using (var dimsColl = new DimensionDataCollection(dispDims))
             {
                 if (dimsColl.Any())
                 {
@@ -260,14 +274,30 @@ namespace CodeStack.SwEx.MacroFeature
         {
         }
 
-        protected TParams GetParameters(IMacroFeatureData featData)
+        protected TParams GetParameters(IFeature feat, IModelDoc2 model)
         {
-            return m_ParamsParser.GetParameters<TParams>(featData);
-        }
+            IDisplayDimension[] dispDims;
+            var parameters = GetParameters(feat, model, out dispDims);
 
+            if (dispDims != null)
+            {
+                for (int i = 0; i < dispDims.Length; i++)
+                {
+                    
+                }
+            }
+
+            return parameters;
+        }
+        
         protected void SetParameters(IMacroFeatureData featData, TParams parameters)
         {
             m_ParamsParser.SetParameters(featData, parameters);
+        }
+
+        private TParams GetParameters(IFeature feat, IModelDoc2 model, out IDisplayDimension[] dispDims)
+        {
+            return m_ParamsParser.GetParameters<TParams>(feat, model, out dispDims);
         }
     }
 

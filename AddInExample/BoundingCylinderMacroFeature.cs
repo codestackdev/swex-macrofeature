@@ -33,7 +33,7 @@ namespace CodeStack.SwEx.MacroFeature.Example
 
             featData.AccessSelections(model, (feature as IEntity).GetComponent());
 
-            var parameters = GetParameters(featData);
+            var parameters = GetParameters(feature, model);
 
             var addHeight = parameters.AddHeight;
 

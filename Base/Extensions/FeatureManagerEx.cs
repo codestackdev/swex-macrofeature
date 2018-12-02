@@ -68,6 +68,65 @@ namespace SolidWorks.Interop.sldworks
             }
         }
 
+        public static IFeature ReplaceComFeature<TMacroFeature>(this IFeatureManager featMgr, IFeature feat)
+            where TMacroFeature : MacroFeatureEx
+        {
+            if (feat == null)
+            {
+                throw new ArgumentNullException(nameof(feat));
+            }
+
+            var featData = feat.GetDefinition() as IMacroFeatureData;
+
+            if (featData == null)
+            {
+                throw new NullReferenceException("Specified feature not a macro feature");
+            }
+
+            var model = featMgr.Document;
+
+            var res = featMgr.EditRollback((int)swMoveRollbackBarTo_e.swMoveRollbackBarToAfterFeature, feat.Name);
+
+            var deleteFeatFunc = new Action(() =>
+            {
+                res = feat.Select2(false, -1);
+                int DEFAULT_DEL_OPTS = 0;
+                res = model.Extension.DeleteSelection2(DEFAULT_DEL_OPTS);
+                //using (var selGrp = new SelectionGroup(model.ISelectionManager))
+                //{
+                //    res = selGrp.Add(feat);
+                //    int DEFAULT_DEL_OPTS = 0;
+                //    res = model.Extension.DeleteSelection2(DEFAULT_DEL_OPTS);
+                //}
+            });
+
+            IFeature newFeat = null;
+
+            var name = feat.Name;
+
+            if (typeof(TMacroFeature).IsAssignableToGenericType(typeof(MacroFeatureEx<>)))
+            {
+                var paramsType = typeof(TMacroFeature).GetArgumentsOfGenericType(typeof(MacroFeatureEx<>)).First();
+                IDisplayDimension[] dispDims;
+                var parameters = m_ParamsParser.GetParameters(feat, model, paramsType, out dispDims);
+                MacroFeatureParametersParser.ReleaseDisplayDimensions(dispDims);
+
+                deleteFeatFunc.Invoke();
+                newFeat = InsertComFeatureWithParameters<TMacroFeature>(featMgr, parameters);
+            }
+            else
+            {
+                deleteFeatFunc.Invoke();
+                newFeat = InsertComFeature<TMacroFeature>(featMgr);
+            }
+
+            featMgr.EditRollback((int)swMoveRollbackBarTo_e.swMoveRollbackBarToEnd, "");
+
+            newFeat.Name = name;
+
+            return newFeat;
+        }
+
         private static IFeature InsertComFeatureWithParameters<TMacroFeature>(
             IFeatureManager featMgr, object parameters)
             where TMacroFeature : MacroFeatureEx

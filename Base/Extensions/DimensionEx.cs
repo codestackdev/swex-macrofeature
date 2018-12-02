@@ -30,8 +30,6 @@ namespace SolidWorks.Interop.sldworks
                 m_MathUtils.CreatePoint(new double[3]) as IMathPoint
             };
 
-            //MathVector extDirVec = null;
-
             if (extDir == null)
             {
                 var yVec = new Vector(0, 1, 0);
@@ -44,17 +42,6 @@ namespace SolidWorks.Interop.sldworks
                     extDir = yVec.Cross(dir);
                 }
             }
-
-            //var yVec = new Vector(0, 1, 0);
-            //if (dir.IsSame(yVec))
-            //{
-            //    var xVec = new double[] { 1, 0, 0 };
-            //    extDirVec = m_MathUtils.CreateVector(xVec) as MathVector;
-            //}
-            //else
-            //{
-            //    extDirVec = (m_MathUtils.CreateVector(yVec.ToArray()) as MathVector).Cross(dimDirVec) as MathVector;
-            //}
 
             var extDirVec = m_MathUtils.CreateVector(extDir.ToArray()) as MathVector;
             
