@@ -9,6 +9,7 @@ using CodeStack.SwEx.Common.Icons;
 using CodeStack.SwEx.Common.Reflection;
 using CodeStack.SwEx.MacroFeature;
 using CodeStack.SwEx.MacroFeature.Attributes;
+using CodeStack.SwEx.MacroFeature.Base;
 using CodeStack.SwEx.MacroFeature.Helpers;
 using CodeStack.SwEx.MacroFeature.Icons;
 using SolidWorks.Interop.swconst;
@@ -68,6 +69,13 @@ namespace SolidWorks.Interop.sldworks
             }
         }
 
+        public static IFeature ReplaceComFeature<TMacroFeature, TParams>(this IFeatureManager featMgr, IFeature feat, TParams parameters)
+            where TMacroFeature : MacroFeatureEx<TParams>
+            where TParams : class, new()
+        {
+            return featMgr.ReplaceComFeatureBase<TMacroFeature>(feat, parameters);
+        }
+
         public static IFeature ReplaceComFeature<TMacroFeature>(this IFeatureManager featMgr, IFeature feat)
             where TMacroFeature : MacroFeatureEx
         {
@@ -85,40 +93,69 @@ namespace SolidWorks.Interop.sldworks
 
             var model = featMgr.Document;
 
-            var res = featMgr.EditRollback((int)swMoveRollbackBarTo_e.swMoveRollbackBarToAfterFeature, feat.Name);
-
-            var deleteFeatFunc = new Action(() =>
-            {
-                res = feat.Select2(false, -1);
-                int DEFAULT_DEL_OPTS = 0;
-                res = model.Extension.DeleteSelection2(DEFAULT_DEL_OPTS);
-            });
-
-            IFeature newFeat = null;
-
-            var name = feat.Name;
+            object parameters = null;
 
             if (typeof(TMacroFeature).IsAssignableToGenericType(typeof(MacroFeatureEx<>)))
             {
                 var paramsType = typeof(TMacroFeature).GetArgumentsOfGenericType(typeof(MacroFeatureEx<>)).First();
                 IDisplayDimension[] dispDims;
-                var parameters = m_ParamsParser.GetParameters(feat, model, paramsType, out dispDims);
+                MacroFeatureOutdateState_e state;
+                parameters = m_ParamsParser.GetParameters(feat, featData, model, paramsType, out dispDims, out state);
                 MacroFeatureParametersParser.ReleaseDisplayDimensions(dispDims);
+            }
 
-                deleteFeatFunc.Invoke();
-                newFeat = InsertComFeatureWithParameters<TMacroFeature>(featMgr, parameters);
+            return featMgr.ReplaceComFeatureBase<TMacroFeature>(feat, parameters);
+        }
+
+        private static IFeature ReplaceComFeatureBase<TMacroFeature>(this IFeatureManager featMgr, IFeature feat, object parameters)
+            where TMacroFeature : MacroFeatureEx
+        {
+            if (feat == null)
+            {
+                throw new ArgumentNullException(nameof(feat));
+            }
+
+            var model = featMgr.Document;
+
+            if (featMgr.EditRollback((int)swMoveRollbackBarTo_e.swMoveRollbackBarToAfterFeature, feat.Name))
+            {
+                IFeature newFeat = null;
+
+                var name = feat.Name;
+
+                if (feat.Select2(false, -1))
+                {
+                    int DEFAULT_DEL_OPTS = 0;
+                    if (!model.Extension.DeleteSelection2(DEFAULT_DEL_OPTS))
+                    {
+                        Debug.Assert(false, "Failed to delete feature");
+                    }
+                }
+                else
+                {
+                    Debug.Assert(false, "Failed to select feature");
+                }
+
+                if (parameters != null)
+                {
+                    newFeat = InsertComFeatureWithParameters<TMacroFeature>(featMgr, parameters);
+                }
+                else
+                {
+                    newFeat = InsertComFeature<TMacroFeature>(featMgr);
+                }
+
+                featMgr.EditRollback((int)swMoveRollbackBarTo_e.swMoveRollbackBarToEnd, "");
+
+                newFeat.Name = name;
+
+                return newFeat;
             }
             else
             {
-                deleteFeatFunc.Invoke();
-                newFeat = InsertComFeature<TMacroFeature>(featMgr);
+                Debug.Assert(false, "Failed to rollback the feature");
+                return null;
             }
-
-            featMgr.EditRollback((int)swMoveRollbackBarTo_e.swMoveRollbackBarToEnd, "");
-
-            newFeat.Name = name;
-
-            return newFeat;
         }
 
         private static IFeature InsertComFeatureWithParameters<TMacroFeature>(

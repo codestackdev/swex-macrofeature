@@ -226,7 +226,7 @@ namespace CodeStack.SwEx.MacroFeature
 
         public MacroFeatureEx()
         {
-            m_ParamsParser = new MacroFeatureParametersParser();
+            m_ParamsParser = new MacroFeatureParametersParser(this.GetType());
         }
 
         [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
@@ -235,7 +235,7 @@ namespace CodeStack.SwEx.MacroFeature
             var featDef = feature.GetDefinition() as IMacroFeatureData;
 
             IDisplayDimension[] dispDims;
-            var parameters = GetParameters(feature, model, out dispDims);
+            var parameters = GetParameters(feature, featDef, model, out dispDims);
 
             var res = OnRebuild(app, model, feature, parameters);
 
@@ -274,10 +274,10 @@ namespace CodeStack.SwEx.MacroFeature
         {
         }
 
-        protected TParams GetParameters(IFeature feat, IModelDoc2 model)
+        protected TParams GetParameters(IFeature feat, IMacroFeatureData featData, IModelDoc2 model)
         {
             IDisplayDimension[] dispDims;
-            var parameters = GetParameters(feat, model, out dispDims);
+            var parameters = GetParameters(feat, featData, model, out dispDims);
 
             if (dispDims != null)
             {
@@ -290,10 +290,10 @@ namespace CodeStack.SwEx.MacroFeature
             return parameters;
         }
         
-        protected void SetParameters(IModelDoc2 model, IFeature feat, TParams parameters)
+        protected void SetParameters(IModelDoc2 model, IFeature feat, IMacroFeatureData featData, TParams parameters)
         {
-            bool isOutdated;
-            SetParameters(model, feat, parameters, out isOutdated);
+            MacroFeatureOutdateState_e state;
+            SetParameters(model, feat, featData, parameters, out state);
         }
 
         /// <summary>
@@ -303,14 +303,20 @@ namespace CodeStack.SwEx.MacroFeature
         /// <param name="feat"></param>
         /// <param name="parameters"></param>
         /// <param name="isOutdated">Indicates that parameters version is outdated and feature needs to be replaced</param>
-        protected void SetParameters(IModelDoc2 model, IFeature feat, TParams parameters, out bool isOutdated)
+        protected void SetParameters(IModelDoc2 model, IFeature feat, IMacroFeatureData featData, TParams parameters, out MacroFeatureOutdateState_e state)
         {
-            m_ParamsParser.SetParameters(model, feat, parameters, out isOutdated);
+            m_ParamsParser.SetParameters(model, feat, featData, parameters, out state);
         }
 
-        private TParams GetParameters(IFeature feat, IModelDoc2 model, out IDisplayDimension[] dispDims)
+        private TParams GetParameters(IFeature feat, IMacroFeatureData featData, IModelDoc2 model, out IDisplayDimension[] dispDims)
         {
-            return m_ParamsParser.GetParameters<TParams>(feat, model, out dispDims);
+            MacroFeatureOutdateState_e state;
+            return GetParameters(feat, featData, model, out dispDims, out state);
+        }
+
+        private TParams GetParameters(IFeature feat, IMacroFeatureData featData, IModelDoc2 model, out IDisplayDimension[] dispDims, out MacroFeatureOutdateState_e state)
+        {
+            return m_ParamsParser.GetParameters<TParams>(feat, featData, model, out dispDims, out state);
         }
     }
 

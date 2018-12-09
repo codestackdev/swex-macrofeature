@@ -54,12 +54,12 @@ namespace CodeStack.SwEx.MacroFeature.Example
 
             featData.AccessSelections(model, null);
 
-            var featParams = GetParameters(feature, model);
+            var featParams = GetParameters(feature, featData, model);
 
             app.SendMsgToUser($"{nameof(featParams.Param2)} = {featParams.Param2}; {nameof(featParams.EditDefinitionsCount)} = {featParams.EditDefinitionsCount}");
             featParams.EditDefinitionsCount = featParams.EditDefinitionsCount + 1;
 
-            SetParameters(model, feature, featParams);
+            SetParameters(model, feature, featData, featParams);
 
             feature.ModifyDefinition(featData, model, null);
 

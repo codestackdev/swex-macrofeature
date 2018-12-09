@@ -10,6 +10,7 @@ using CodeStack.SwEx.MacroFeature.Attributes;
 using CodeStack.SwEx.MacroFeature.Base;
 using CodeStack.SwEx.MacroFeature.Data;
 using CodeStack.SwEx.MacroFeature.Exceptions;
+using CodeStack.SwEx.MacroFeature.Icons;
 using CodeStack.SwEx.MacroFeature.Mocks;
 using SolidWorks.Interop.sldworks;
 using SolidWorks.Interop.swconst;
@@ -27,16 +28,28 @@ namespace CodeStack.SwEx.MacroFeature.Helpers
         private const string VERSION_PARAMETERS_NAME = "__paramsVersion";
         private const string VERSION_DIMENSIONS_NAME = "__dimsVersion";
 
-        internal TParams GetParameters<TParams>(IFeature feat, IModelDoc2 model, out IDisplayDimension[] dispDims)
-            where TParams : class, new()
+        private string[] m_CurrentIcons;
+
+        internal MacroFeatureParametersParser()
         {
-            return GetParameters(feat, model, typeof(TParams), out dispDims) as TParams;
         }
 
-        internal object GetParameters(IFeature feat, IModelDoc2 model, Type paramsType, out IDisplayDimension[] dispDims)
+        internal MacroFeatureParametersParser(Type macroFeatType)
         {
-            var featData = feat.GetDefinition() as IMacroFeatureData;
+            var app = Context.CurrentApp;
+            m_CurrentIcons = MacroFeatureIconInfo.GetIcons(macroFeatType, app.SupportsHighResIcons());
+        }
 
+        internal TParams GetParameters<TParams>(IFeature feat, IMacroFeatureData featData, IModelDoc2 model, 
+            out IDisplayDimension[] dispDims, out MacroFeatureOutdateState_e state)
+            where TParams : class, new()
+        {
+            return GetParameters(feat, featData, model, typeof(TParams), out dispDims, out state) as TParams;
+        }
+
+        internal object GetParameters(IFeature feat, IMacroFeatureData featData, IModelDoc2 model, Type paramsType,
+            out IDisplayDimension[] dispDims, out MacroFeatureOutdateState_e state)
+        {
             object retParamNames = null;
             object retParamValues = null;
             object paramTypes = null;
@@ -172,6 +185,7 @@ namespace CodeStack.SwEx.MacroFeature.Helpers
                     });
 
                 dispDims = localDispDims;
+                state = GetState(featData, localDispDims);
                 return resParams;
             }
             catch
@@ -239,10 +253,9 @@ namespace CodeStack.SwEx.MacroFeature.Helpers
             }
         }
 
-        internal void SetParameters(IModelDoc2 model, IFeature feat, object parameters, out bool isOutdated)
+        internal void SetParameters(IModelDoc2 model, IFeature feat,
+            IMacroFeatureData featData, object parameters, out MacroFeatureOutdateState_e state)
         {
-            var featData = feat.GetDefinition() as IMacroFeatureData;
-
             string[] paramNames;
             int[] paramTypes;
             string[] paramValues;
@@ -285,9 +298,7 @@ namespace CodeStack.SwEx.MacroFeature.Helpers
             {
                 dispDims = conv.ConvertDisplayDimensions(model, feat, dispDims);
             });
-
-            var dimsOutdated = false;
-
+            
             if (dispDims != null)
             {
                 try
@@ -306,10 +317,6 @@ namespace CodeStack.SwEx.MacroFeature.Helpers
                             SetAndReleaseDimension(dispDim, i, dimValues[i],
                                 featData.CurrentConfiguration.Name);
                         }
-                        else
-                        {
-                            dimsOutdated = true;
-                        }
                     }
                 }
                 catch
@@ -319,11 +326,13 @@ namespace CodeStack.SwEx.MacroFeature.Helpers
                 }
             }
 
+            state = GetState(featData, dispDims);
+
             if (paramNames.Any())
             {
                 //macro feature dimensions cannot be changed in the existing feature
                 //reverting the dimensions version
-                if (dimsOutdated)
+                if (state.HasFlag(MacroFeatureOutdateState_e.Dimensions))
                 {
                     var index = Array.IndexOf(paramNames, VERSION_DIMENSIONS_NAME);
                     paramValues[index] = dimsVersion.ToString();
@@ -331,13 +340,34 @@ namespace CodeStack.SwEx.MacroFeature.Helpers
 
                 featData.SetParameters(paramNames, paramTypes, paramValues);
             }
-
-            isOutdated = dimsOutdated;
         }
 
         private Version GetDimensionsVersion(IMacroFeatureData featData)
         {
             return GetVersion(featData, VERSION_DIMENSIONS_NAME);
+        }
+
+        private MacroFeatureOutdateState_e GetState(IMacroFeatureData featData, IDisplayDimension[] dispDims)
+        {
+            var state = MacroFeatureOutdateState_e.UpToDate;
+
+            if (dispDims != null && dispDims.Any(d => d is DisplayDimensionEmpty))
+            {
+                state |= MacroFeatureOutdateState_e.Dimensions;
+            }
+
+            if (m_CurrentIcons != null)
+            {
+                var curIcons = featData.IconFiles as string[];
+
+                if (curIcons == null || !m_CurrentIcons.SequenceEqual(curIcons, 
+                    StringComparer.CurrentCultureIgnoreCase))
+                {
+                    state |= MacroFeatureOutdateState_e.Icons;
+                }
+            }
+            
+            return state;
         }
 
         private Version GetVersion(IMacroFeatureData featData, string name)

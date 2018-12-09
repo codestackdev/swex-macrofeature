@@ -29,7 +29,8 @@ namespace CodeStack.SwEx.MacroFeature.Example
             IFeature feature, DimensionMacroFeatureParams parameters)
         {
             parameters.RefCalcDimension = parameters.RefDimension * 2;
-            SetParameters(model, feature, parameters);
+            var featData = feature.GetDefinition() as IMacroFeatureData;
+            SetParameters(model, feature, featData, parameters);
             feature.Name = parameters.RefDimension.ToString();
 
             return MacroFeatureRebuildResult.FromStatus(true);

@@ -5,13 +5,15 @@
 //Product URL: https://www.codestack.net/labs/solidworks/swex/macro-feature
 //**********************
 
-using SolidWorks.Interop.sldworks;
+using System;
 
 namespace CodeStack.SwEx.MacroFeature.Base
 {
-    public interface IMacroFeatureHandler
+    [Flags]
+    public enum MacroFeatureOutdateState_e
     {
-        void Init(ISldWorks app, IModelDoc2 model, IFeature feat);
-        void Unload();
+        UpToDate = 0,
+        Icons = 1 << 0,
+        Dimensions = 1 << 1
     }
 }

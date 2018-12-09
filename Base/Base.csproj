@@ -69,6 +69,7 @@
     <Compile Include="Attributes\ParametersVersionAttribute.cs" />
     <Compile Include="Base\IMacroFeatureHandler.cs" />
     <Compile Include="Base\IParametersVersionConverter.cs" />
+    <Compile Include="Base\MacroFeatureOutdateState.cs" />
     <Compile Include="Base\MacroFeatureRebuildBodyResult.cs" />
     <Compile Include="Base\MacroFeatureRebuildPatternResult.cs" />
     <Compile Include="Base\MacroFeatureRebuildResult.cs" />
