@@ -30,9 +30,9 @@ namespace CodeStack.SwEx.MacroFeature.Base
             return new MacroFeatureRebuildPatternResult(bodiesPattern);
         }
 
-        public static MacroFeatureRebuildResult FromStatus(bool status)
+        public static MacroFeatureRebuildResult FromStatus(bool status, string error = "")
         {
-            return new MacroFeatureRebuldStatusResult(status);
+            return new MacroFeatureRebuldStatusResult(status, error);
         }
 
         private readonly object m_Result;

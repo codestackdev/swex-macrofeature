@@ -43,7 +43,7 @@ namespace CodeStack.SwEx.MacroFeature.Example
             {
                 parameters.AddHeight = newAddHeight;
 
-                SetParameters(featData, parameters);
+                SetParameters(model, feature, parameters);
 
                 feature.ModifyDefinition(featData, model, (feature as IEntity).GetComponent());
             }

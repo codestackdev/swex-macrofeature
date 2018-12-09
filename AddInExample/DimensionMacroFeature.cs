@@ -28,9 +28,8 @@ namespace CodeStack.SwEx.MacroFeature.Example
         protected override MacroFeatureRebuildResult OnRebuild(ISldWorks app, IModelDoc2 model,
             IFeature feature, DimensionMacroFeatureParams parameters)
         {
-            var featData = feature.GetDefinition() as IMacroFeatureData;
             parameters.RefCalcDimension = parameters.RefDimension * 2;
-            SetParameters(featData, parameters);
+            SetParameters(model, feature, parameters);
             feature.Name = parameters.RefDimension.ToString();
 
             return MacroFeatureRebuildResult.FromStatus(true);

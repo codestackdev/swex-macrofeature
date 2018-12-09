@@ -92,12 +92,6 @@ namespace SolidWorks.Interop.sldworks
                 res = feat.Select2(false, -1);
                 int DEFAULT_DEL_OPTS = 0;
                 res = model.Extension.DeleteSelection2(DEFAULT_DEL_OPTS);
-                //using (var selGrp = new SelectionGroup(model.ISelectionManager))
-                //{
-                //    res = selGrp.Add(feat);
-                //    int DEFAULT_DEL_OPTS = 0;
-                //    res = model.Extension.DeleteSelection2(DEFAULT_DEL_OPTS);
-                //}
             });
 
             IFeature newFeat = null;

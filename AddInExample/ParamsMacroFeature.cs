@@ -59,7 +59,7 @@ namespace CodeStack.SwEx.MacroFeature.Example
             app.SendMsgToUser($"{nameof(featParams.Param2)} = {featParams.Param2}; {nameof(featParams.EditDefinitionsCount)} = {featParams.EditDefinitionsCount}");
             featParams.EditDefinitionsCount = featParams.EditDefinitionsCount + 1;
 
-            SetParameters(featData, featParams);
+            SetParameters(model, feature, featParams);
 
             feature.ModifyDefinition(featData, model, null);
 

@@ -290,9 +290,22 @@ namespace CodeStack.SwEx.MacroFeature
             return parameters;
         }
         
-        protected void SetParameters(IMacroFeatureData featData, TParams parameters)
+        protected void SetParameters(IModelDoc2 model, IFeature feat, TParams parameters)
         {
-            m_ParamsParser.SetParameters(featData, parameters);
+            bool isOutdated;
+            SetParameters(model, feat, parameters, out isOutdated);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="model"></param>
+        /// <param name="feat"></param>
+        /// <param name="parameters"></param>
+        /// <param name="isOutdated">Indicates that parameters version is outdated and feature needs to be replaced</param>
+        protected void SetParameters(IModelDoc2 model, IFeature feat, TParams parameters, out bool isOutdated)
+        {
+            m_ParamsParser.SetParameters(model, feat, parameters, out isOutdated);
         }
 
         private TParams GetParameters(IFeature feat, IModelDoc2 model, out IDisplayDimension[] dispDims)

@@ -24,7 +24,8 @@ namespace CodeStack.SwEx.MacroFeature.Helpers
 {
     internal class MacroFeatureParametersParser
     {
-        private const string VERSION_PARAMETER_NAME = "__version";
+        private const string VERSION_PARAMETERS_NAME = "__paramsVersion";
+        private const string VERSION_DIMENSIONS_NAME = "__dimsVersion";
 
         internal TParams GetParameters<TParams>(IFeature feat, IModelDoc2 model, out IDisplayDimension[] dispDims)
             where TParams : class, new()
@@ -84,15 +85,20 @@ namespace CodeStack.SwEx.MacroFeature.Helpers
 
                 var parameters = new Dictionary<string, string>();
 
-                var paramVersion = new Version();
+                var paramsVersion = new Version();
+                var dimsVersion = new Version();
 
                 if (paramNames != null && paramValues != null)
                 {
                     for (int i = 0; i < paramNames.Length; i++)
                     {
-                        if (paramNames[i] == VERSION_PARAMETER_NAME)
+                        if (paramNames[i] == VERSION_PARAMETERS_NAME)
                         {
-                            paramVersion = new Version(paramValues[i]);
+                            paramsVersion = new Version(paramValues[i]);
+                        }
+                        else if (paramNames[i] == VERSION_DIMENSIONS_NAME)
+                        {
+                            paramsVersion = new Version(paramValues[i]);
                         }
                         else
                         {
@@ -101,9 +107,14 @@ namespace CodeStack.SwEx.MacroFeature.Helpers
                     }
                 }
 
-                ConvertParameterVersion(paramsType, model, feat, ref localDispDims,
-                    ref editBodies, ref selObjects, ref parameters, paramVersion);
-
+                ConvertParameters(paramsType, paramsVersion, conv =>
+                {
+                    parameters = conv.ConvertParameters(model, feat, parameters);
+                    editBodies = conv.ConvertEditBodies(model, feat, editBodies);
+                    selObjects = conv.ConvertSelections(model, feat, selObjects);
+                    localDispDims = conv.ConvertDisplayDimensions(model, feat, localDispDims);
+                });
+                
                 var resParams = Activator.CreateInstance(paramsType);
 
                 TraverseParametersDefinition(resParams.GetType(),
@@ -184,11 +195,8 @@ namespace CodeStack.SwEx.MacroFeature.Helpers
             }
         }
 
-        private void ConvertParameterVersion(Type paramsType,
-            IModelDoc2 model, IFeature feat,
-            ref IDisplayDimension[] dispDims, ref IBody2[] editBodies,
-            ref object[] selObjects, ref Dictionary<string, string> parameters,
-            Version paramVersion)
+        private void ConvertParameters(Type paramsType, Version paramVersion,
+            Action<IParameterConverter> converter)
         {
             IParametersVersionConverter versConv = null;
             var curParamVersion = new Version();
@@ -211,10 +219,7 @@ namespace CodeStack.SwEx.MacroFeature.Helpers
                                 v => v.Key > paramVersion && v.Key <= curParamVersion)
                                 .OrderBy(v => v.Key))
                             {
-                                parameters = conv.Value.ConvertParameters(model, feat, parameters);
-                                editBodies = conv.Value.ConvertEditBodies(model, feat, editBodies);
-                                selObjects = conv.Value.ConvertSelections(model, feat, selObjects);
-                                dispDims = conv.Value.ConvertDisplayDimensions(model, feat, dispDims);
+                                converter.Invoke(conv.Value);
                             }
                         }
                         else
@@ -234,8 +239,10 @@ namespace CodeStack.SwEx.MacroFeature.Helpers
             }
         }
 
-        internal void SetParameters(IMacroFeatureData featData, object parameters)
+        internal void SetParameters(IModelDoc2 model, IFeature feat, object parameters, out bool isOutdated)
         {
+            var featData = feat.GetDefinition() as IMacroFeatureData;
+
             string[] paramNames;
             int[] paramTypes;
             string[] paramValues;
@@ -248,11 +255,6 @@ namespace CodeStack.SwEx.MacroFeature.Helpers
                 out paramNames, out paramTypes, out paramValues,
                 out selection, out dimTypes, out dimValues, out bodies);
 
-            if (paramNames.Any())
-            {
-                featData.SetParameters(paramNames, paramTypes, paramValues);
-            }
-
             if (selection.Any())
             {
                 var dispWraps = selection.Select(s => new DispatchWrapper(s)).ToArray();
@@ -263,35 +265,93 @@ namespace CodeStack.SwEx.MacroFeature.Helpers
             featData.EditBodies = bodies;
 
             var dispDimsObj = featData.GetDisplayDimensions() as object[];
-            
+
+            IDisplayDimension[] dispDims = null;
+
             if (dispDimsObj != null)
+            {
+                dispDims = new IDisplayDimension[dispDimsObj.Length];
+
+                for (int i = 0; i < dispDimsObj.Length; i++)
+                {
+                    dispDims[i] = dispDimsObj[i] as IDisplayDimension;
+                    dispDimsObj[i] = null;
+                }
+            }
+
+            var dimsVersion = GetDimensionsVersion(featData);
+
+            ConvertParameters(parameters.GetType(), dimsVersion, conv =>
+            {
+                dispDims = conv.ConvertDisplayDimensions(model, feat, dispDims);
+            });
+
+            var dimsOutdated = false;
+
+            if (dispDims != null)
             {
                 try
                 {
-                    if (dispDimsObj.Length != dimValues.Length)
+                    if (dispDims.Length != dimValues.Length)
                     {
                         throw new ParametersMismatchException("Dimensions mismatch");
                     }
 
-                    for (int i = 0; i < dispDimsObj.Length; i++)
+                    for (int i = 0; i < dispDims.Length; i++)
                     {
-                        var dispDim = dispDimsObj[i] as IDisplayDimension;
-                        SetAndReleaseDimension(dispDim, i, dimValues[i],
-                            featData.CurrentConfiguration.Name);
+                        var dispDim = dispDims[i];
+
+                        if (!(dispDim is DisplayDimensionEmpty))
+                        {
+                            SetAndReleaseDimension(dispDim, i, dimValues[i],
+                                featData.CurrentConfiguration.Name);
+                        }
+                        else
+                        {
+                            dimsOutdated = true;
+                        }
                     }
                 }
                 catch
                 {
-                    for (int i = 0; i < dispDimsObj.Length; i++)
-                    {
-                        var dispDim = dispDimsObj[i] as IDisplayDimension;
-                        dispDimsObj[i] = null;
-                        ReleaseDimension(dispDim);
-                    }
-
+                    ReleaseDisplayDimensions(dispDims);
                     throw;
                 }
             }
+
+            if (paramNames.Any())
+            {
+                //macro feature dimensions cannot be changed in the existing feature
+                //reverting the dimensions version
+                if (dimsOutdated)
+                {
+                    var index = Array.IndexOf(paramNames, VERSION_DIMENSIONS_NAME);
+                    paramValues[index] = dimsVersion.ToString();
+                }
+
+                featData.SetParameters(paramNames, paramTypes, paramValues);
+            }
+
+            isOutdated = dimsOutdated;
+        }
+
+        private Version GetDimensionsVersion(IMacroFeatureData featData)
+        {
+            return GetVersion(featData, VERSION_DIMENSIONS_NAME);
+        }
+
+        private Version GetVersion(IMacroFeatureData featData, string name)
+        {
+            Version dimsVersion;
+            string versVal;
+            featData.GetStringByName(name, out versVal);
+
+            if (!Version.TryParse(versVal, out dimsVersion))
+            {
+                dimsVersion = new Version();
+            }
+
+            return dimsVersion;
         }
 
         private void SetAndReleaseDimension(IDisplayDimension dispDim,
@@ -403,18 +463,24 @@ namespace CodeStack.SwEx.MacroFeature.Helpers
 
             parameters.GetType().TryGetAttribute<ParametersVersionAttribute>(a => 
             {
-                var versParamIndex = paramNamesList.IndexOf(VERSION_PARAMETER_NAME);
+                var setVersionFunc = new Action<string, Version>((n, v) => 
+                {
+                    var versParamIndex = paramNamesList.IndexOf(n);
 
-                if (versParamIndex == -1)
-                {
-                    paramNamesList.Add(VERSION_PARAMETER_NAME);
-                    paramValuesList.Add(a.Version.ToString());
-                    paramTypesList.Add((int)swMacroFeatureParamType_e.swMacroFeatureParamTypeString);
-                }
-                else
-                {
-                    paramValuesList[versParamIndex] = a.Version.ToString();
-                }
+                    if (versParamIndex == -1)
+                    {
+                        paramNamesList.Add(n);
+                        paramValuesList.Add(v.ToString());
+                        paramTypesList.Add((int)swMacroFeatureParamType_e.swMacroFeatureParamTypeString);
+                    }
+                    else
+                    {
+                        paramValuesList[versParamIndex] = v.ToString();
+                    }
+                });
+
+                setVersionFunc.Invoke(VERSION_PARAMETERS_NAME, a.Version);
+                setVersionFunc.Invoke(VERSION_DIMENSIONS_NAME, a.Version);
             });
 
             paramNames = paramNamesList.ToArray();
