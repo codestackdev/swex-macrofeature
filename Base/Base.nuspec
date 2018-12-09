@@ -2,7 +2,7 @@
 <package >
   <metadata>
     <id>CodeStack.SwEx.MacroFeature</id>
-    <version>0.1.0-alpha</version>
+    <version>0.2.0-alpha</version>
     <title>Framework for developing custom macro features in SOLIDWORKS</title>
     <authors>CodeStack</authors>
     <owners>CodeStack</owners>

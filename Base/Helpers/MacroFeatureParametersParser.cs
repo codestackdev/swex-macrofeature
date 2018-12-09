@@ -7,6 +7,11 @@
 
 using CodeStack.SwEx.Common.Reflection;
 using CodeStack.SwEx.MacroFeature.Attributes;
+using CodeStack.SwEx.MacroFeature.Base;
+using CodeStack.SwEx.MacroFeature.Data;
+using CodeStack.SwEx.MacroFeature.Exceptions;
+using CodeStack.SwEx.MacroFeature.Icons;
+using CodeStack.SwEx.MacroFeature.Mocks;
 using SolidWorks.Interop.sldworks;
 using SolidWorks.Interop.swconst;
 using System;
@@ -20,8 +25,30 @@ namespace CodeStack.SwEx.MacroFeature.Helpers
 {
     internal class MacroFeatureParametersParser
     {
-        internal TParams GetParameters<TParams>(IMacroFeatureData featData)
+        private const string VERSION_PARAMETERS_NAME = "__paramsVersion";
+        private const string VERSION_DIMENSIONS_NAME = "__dimsVersion";
+
+        private string[] m_CurrentIcons;
+
+        internal MacroFeatureParametersParser()
+        {
+        }
+
+        internal MacroFeatureParametersParser(Type macroFeatType)
+        {
+            var app = Context.CurrentApp;
+            m_CurrentIcons = MacroFeatureIconInfo.GetIcons(macroFeatType, app.SupportsHighResIcons());
+        }
+
+        internal TParams GetParameters<TParams>(IFeature feat, IMacroFeatureData featData, IModelDoc2 model, 
+            out IDisplayDimension[] dispDims, out MacroFeatureOutdateState_e state)
             where TParams : class, new()
+        {
+            return GetParameters(feat, featData, model, typeof(TParams), out dispDims, out state) as TParams;
+        }
+
+        internal object GetParameters(IFeature feat, IMacroFeatureData featData, IModelDoc2 model, Type paramsType,
+            out IDisplayDimension[] dispDims, out MacroFeatureOutdateState_e state)
         {
             object retParamNames = null;
             object retParamValues = null;
@@ -35,84 +62,199 @@ namespace CodeStack.SwEx.MacroFeature.Helpers
             featData.GetParameters(out retParamNames, out paramTypes, out retParamValues);
             featData.GetSelections3(out retSelObj, out selObjType, out selMarks, out selDrViews, out compXforms);
 
-            var dispDimsObj = featData.GetDisplayDimensions() as object[];
-
-            IDisplayDimension[] dispDims = null;
-
-            if (dispDimsObj != null)
+            IDisplayDimension[] localDispDims = null;
+            
+            try
             {
-                dispDims = dispDimsObj.Cast<IDisplayDimension>().ToArray();
-            }
+                var dispDimsObj = featData.GetDisplayDimensions() as object[];
 
-            object[] editBodiesObj = featData.EditBodies as object[];
-
-            IBody2[] editBodies = null;
-
-            if (editBodiesObj != null)
-            {
-                editBodies = editBodiesObj.Cast<IBody2>().ToArray();
-            }
-
-            var paramNames = retParamNames as string[];
-            var paramValues = retParamValues as string[];
-            var selObjects = retSelObj as object[];
-
-            var resParams = new TParams();
-
-            TraverseParametersDefinition(resParams.GetType(),
-                (selIndex, prp) =>
+                if (dispDimsObj != null)
                 {
-                    if (selObjects != null && selObjects.Length > selIndex)
+                    localDispDims = new IDisplayDimension[dispDimsObj.Length];
+
+                    for (int i = 0; i < localDispDims.Length; i++)
                     {
-                        var val = selObjects[selIndex];
-                        prp.SetValue(resParams, val, null);
+                        localDispDims[i] = dispDimsObj[i] as IDisplayDimension;
+                        dispDimsObj[i] = null;
                     }
-                    else
-                    {
-                        throw new NullReferenceException(
-                            $"Referenced entity is missing at index {selIndex} for {prp.PropertyType.Name}");
-                    }
-                },
-                (dimInd, dimType, prp) => 
+                }
+                else
                 {
-                    if (dispDims.Length > dimInd)
-                    {
-                        var dispDim = dispDims[dimInd];
-                        var dim = dispDim.GetDimension2(0);
-                        var val = (dim.GetSystemValue3(
-                            (int)swInConfigurationOpts_e.swSpecifyConfiguration,
-                            new string[] { featData.CurrentConfiguration.Name }) as double[])[0];
-                        prp.SetValue(resParams, val, null);
-                    }
-                    else
-                    {
-                        throw new IndexOutOfRangeException(
-                            $"Dimension at index {dimInd} id not present in the macro feature");
-                    }
-                },
-                (bodyInd, prp) => 
+                    localDispDims = null;
+                }
+
+                object[] editBodiesObj = featData.EditBodies as object[];
+
+                IBody2[] editBodies = null;
+
+                if (editBodiesObj != null)
                 {
-                    if (editBodies.Length > bodyInd)
-                    {
-                        prp.SetValue(resParams, editBodies[bodyInd], null);
-                    }
-                    else
-                    {
-                        throw new IndexOutOfRangeException(
-                            $"Edit body at index {bodyInd} id not present in the macro feature");
-                    }
-                },
-                prp =>
+                    editBodies = editBodiesObj.Cast<IBody2>().ToArray();
+                }
+
+                var paramNames = retParamNames as string[];
+                var paramValues = retParamValues as string[];
+                var selObjects = retSelObj as object[];
+
+                var parameters = new Dictionary<string, string>();
+
+                var paramsVersion = new Version();
+                var dimsVersion = new Version();
+
+                if (paramNames != null && paramValues != null)
                 {
-                    var paramVal = GetParameterValue(paramNames, paramValues, prp.Name);
-                    var val = Convert.ChangeType(paramVal, prp.PropertyType);
-                    prp.SetValue(resParams, val, null);
+                    for (int i = 0; i < paramNames.Length; i++)
+                    {
+                        if (paramNames[i] == VERSION_PARAMETERS_NAME)
+                        {
+                            paramsVersion = new Version(paramValues[i]);
+                        }
+                        else if (paramNames[i] == VERSION_DIMENSIONS_NAME)
+                        {
+                            paramsVersion = new Version(paramValues[i]);
+                        }
+                        else
+                        {
+                            parameters.Add(paramNames[i], paramValues[i]);
+                        }
+                    }
+                }
+
+                ConvertParameters(paramsType, paramsVersion, conv =>
+                {
+                    parameters = conv.ConvertParameters(model, feat, parameters);
+                    editBodies = conv.ConvertEditBodies(model, feat, editBodies);
+                    selObjects = conv.ConvertSelections(model, feat, selObjects);
+                    localDispDims = conv.ConvertDisplayDimensions(model, feat, localDispDims);
                 });
+                
+                var resParams = Activator.CreateInstance(paramsType);
 
-            return resParams;
+                TraverseParametersDefinition(resParams.GetType(),
+                    (selIndex, prp) =>
+                    {
+                        if (selObjects != null && selObjects.Length > selIndex)
+                        {
+                            var val = selObjects[selIndex];
+                            prp.SetValue(resParams, val, null);
+                        }
+                        else
+                        {
+                            throw new NullReferenceException(
+                                $"Referenced entity is missing at index {selIndex} for {prp.PropertyType.Name}");
+                        }
+                    },
+                    (dimInd, dimType, prp) =>
+                    {
+                        if (localDispDims.Length > dimInd)
+                        {
+                            var dispDim = localDispDims[dimInd];
+
+                            if (!(dispDim is DisplayDimensionEmpty))
+                            {
+                                var dim = dispDim.GetDimension2(0);
+                                var val = (dim.GetSystemValue3(
+                                    (int)swInConfigurationOpts_e.swSpecifyConfiguration,
+                                    new string[] { featData.CurrentConfiguration.Name }) as double[])[0];
+                                prp.SetValue(resParams, val, null);
+                            }
+                        }
+                        else
+                        {
+                            throw new IndexOutOfRangeException(
+                                $"Dimension at index {dimInd} id not present in the macro feature");
+                        }
+                    },
+                    (bodyInd, prp) =>
+                    {
+                        if (editBodies.Length > bodyInd)
+                        {
+                            prp.SetValue(resParams, editBodies[bodyInd], null);
+                        }
+                        else
+                        {
+                            throw new IndexOutOfRangeException(
+                                $"Edit body at index {bodyInd} id not present in the macro feature");
+                        }
+                    },
+                    prp =>
+                    {
+                        var paramVal = GetParameterValue(parameters, prp.Name);
+                        var val = Convert.ChangeType(paramVal, prp.PropertyType);
+                        prp.SetValue(resParams, val, null);
+                    });
+
+                dispDims = localDispDims;
+                state = GetState(featData, localDispDims);
+                return resParams;
+            }
+            catch
+            {
+                ReleaseDisplayDimensions(localDispDims);
+
+                throw;
+            }
         }
 
-        internal void SetParameters(IMacroFeatureData featData, object parameters)
+        internal static void ReleaseDisplayDimensions(IDisplayDimension[] dispDims)
+        {
+            if (dispDims != null)
+            {
+                for (int i = 0; i < dispDims.Length; i++)
+                {
+                    var dispDim = dispDims[i];
+                    dispDims[i] = null;
+                    ReleaseDimension(dispDim);
+                }
+            }
+        }
+
+        private void ConvertParameters(Type paramsType, Version paramVersion,
+            Action<IParameterConverter> converter)
+        {
+            IParametersVersionConverter versConv = null;
+            var curParamVersion = new Version();
+
+            paramsType.TryGetAttribute<ParametersVersionAttribute>(a =>
+            {
+                versConv = a.VersionConverter;
+                curParamVersion = a.Version;
+            });
+
+            if (curParamVersion != paramVersion)
+            {
+                if (curParamVersion > paramVersion)
+                {
+                    if (versConv != null)
+                    {
+                        if (versConv.ContainsKey(curParamVersion))
+                        {
+                            foreach (var conv in versConv.Where(
+                                v => v.Key > paramVersion && v.Key <= curParamVersion)
+                                .OrderBy(v => v.Key))
+                            {
+                                converter.Invoke(conv.Value);
+                            }
+                        }
+                        else
+                        {
+                            throw new NullReferenceException($"{curParamVersion} version of parameters {paramsType.FullName} is not registered");
+                        }
+                    }
+                    else
+                    {
+                        throw new NullReferenceException("Version converter is not set");
+                    }
+                }
+                else
+                {
+                    throw new FutureVersionParametersException(paramsType, curParamVersion, paramVersion);
+                }
+            }
+        }
+
+        internal void SetParameters(IModelDoc2 model, IFeature feat,
+            IMacroFeatureData featData, object parameters, out MacroFeatureOutdateState_e state)
         {
             string[] paramNames;
             int[] paramTypes;
@@ -126,11 +268,6 @@ namespace CodeStack.SwEx.MacroFeature.Helpers
                 out paramNames, out paramTypes, out paramValues,
                 out selection, out dimTypes, out dimValues, out bodies);
 
-            if (paramNames.Any())
-            {
-                featData.SetParameters(paramNames, paramTypes, paramValues);
-            }
-
             if (selection.Any())
             {
                 var dispWraps = selection.Select(s => new DispatchWrapper(s)).ToArray();
@@ -138,35 +275,143 @@ namespace CodeStack.SwEx.MacroFeature.Helpers
                 featData.SetSelections2(dispWraps, new int[selection.Length], new IView[selection.Length]);
             }
 
+            featData.EditBodies = bodies;
+
             var dispDimsObj = featData.GetDisplayDimensions() as object[];
+
+            IDisplayDimension[] dispDims = null;
 
             if (dispDimsObj != null)
             {
+                dispDims = new IDisplayDimension[dispDimsObj.Length];
+
                 for (int i = 0; i < dispDimsObj.Length; i++)
                 {
-                    var dispDim = dispDimsObj[i] as IDisplayDimension;
-                    SetAndReleaseDimension(dispDim, i, dimValues[i],
-                        featData.CurrentConfiguration.Name);
+                    dispDims[i] = dispDimsObj[i] as IDisplayDimension;
+                    dispDimsObj[i] = null;
                 }
             }
 
-            featData.EditBodies = bodies;
+            var dimsVersion = GetDimensionsVersion(featData);
+
+            ConvertParameters(parameters.GetType(), dimsVersion, conv =>
+            {
+                dispDims = conv.ConvertDisplayDimensions(model, feat, dispDims);
+            });
+            
+            if (dispDims != null)
+            {
+                try
+                {
+                    if (dispDims.Length != dimValues.Length)
+                    {
+                        throw new ParametersMismatchException("Dimensions mismatch");
+                    }
+
+                    for (int i = 0; i < dispDims.Length; i++)
+                    {
+                        var dispDim = dispDims[i];
+
+                        if (!(dispDim is DisplayDimensionEmpty))
+                        {
+                            SetAndReleaseDimension(dispDim, i, dimValues[i],
+                                featData.CurrentConfiguration.Name);
+                        }
+                    }
+                }
+                catch
+                {
+                    ReleaseDisplayDimensions(dispDims);
+                    throw;
+                }
+            }
+
+            state = GetState(featData, dispDims);
+
+            if (paramNames.Any())
+            {
+                //macro feature dimensions cannot be changed in the existing feature
+                //reverting the dimensions version
+                if (state.HasFlag(MacroFeatureOutdateState_e.Dimensions))
+                {
+                    var index = Array.IndexOf(paramNames, VERSION_DIMENSIONS_NAME);
+                    paramValues[index] = dimsVersion.ToString();
+                }
+
+                featData.SetParameters(paramNames, paramTypes, paramValues);
+            }
+        }
+
+        private Version GetDimensionsVersion(IMacroFeatureData featData)
+        {
+            return GetVersion(featData, VERSION_DIMENSIONS_NAME);
+        }
+
+        private MacroFeatureOutdateState_e GetState(IMacroFeatureData featData, IDisplayDimension[] dispDims)
+        {
+            var state = MacroFeatureOutdateState_e.UpToDate;
+
+            if (dispDims != null && dispDims.Any(d => d is DisplayDimensionEmpty))
+            {
+                state |= MacroFeatureOutdateState_e.Dimensions;
+            }
+
+            if (m_CurrentIcons != null)
+            {
+                var curIcons = featData.IconFiles as string[];
+
+                if (curIcons == null || !m_CurrentIcons.SequenceEqual(curIcons, 
+                    StringComparer.CurrentCultureIgnoreCase))
+                {
+                    state |= MacroFeatureOutdateState_e.Icons;
+                }
+            }
+            
+            return state;
+        }
+
+        private Version GetVersion(IMacroFeatureData featData, string name)
+        {
+            Version dimsVersion;
+            string versVal;
+            featData.GetStringByName(name, out versVal);
+
+            if (!Version.TryParse(versVal, out dimsVersion))
+            {
+                dimsVersion = new Version();
+            }
+
+            return dimsVersion;
         }
 
         private void SetAndReleaseDimension(IDisplayDimension dispDim,
             int index, double val, string confName)
         {
             var dim = dispDim.GetDimension2(0);
-            
+
             dim.SetSystemValue3(val,
                 (int)swSetValueInConfiguration_e.swSetValue_InSpecificConfigurations,
                 new string[] { confName });
-            
+
+            ReleaseDimension(dispDim, dim);
+        }
+
+        private static void ReleaseDimension(IDisplayDimension dispDim, Dimension dim = null)
+        {
             //NOTE: releasing the pointers as unreleased pointer might cause crash
-            Marshal.ReleaseComObject(dim);
-            Marshal.ReleaseComObject(dispDim);
-            dim = null;
-            dispDim = null;
+
+            if (dim != null && Marshal.IsComObject(dim))
+            {
+                Marshal.ReleaseComObject(dim);
+                dim = null;
+            }
+
+            if (dispDim != null && Marshal.IsComObject(dispDim))
+            {
+                Marshal.ReleaseComObject(dispDim);
+                dispDim = null;
+            }
+
             GC.Collect();
             GC.Collect();
             GC.WaitForPendingFinalizers();
@@ -246,6 +491,28 @@ namespace CodeStack.SwEx.MacroFeature.Helpers
 
             var disps = selectionList.OrderBy(e => e.Key).Select(e => e.Value);
 
+            parameters.GetType().TryGetAttribute<ParametersVersionAttribute>(a => 
+            {
+                var setVersionFunc = new Action<string, Version>((n, v) => 
+                {
+                    var versParamIndex = paramNamesList.IndexOf(n);
+
+                    if (versParamIndex == -1)
+                    {
+                        paramNamesList.Add(n);
+                        paramValuesList.Add(v.ToString());
+                        paramTypesList.Add((int)swMacroFeatureParamType_e.swMacroFeatureParamTypeString);
+                    }
+                    else
+                    {
+                        paramValuesList[versParamIndex] = v.ToString();
+                    }
+                });
+
+                setVersionFunc.Invoke(VERSION_PARAMETERS_NAME, a.Version);
+                setVersionFunc.Invoke(VERSION_DIMENSIONS_NAME, a.Version);
+            });
+
             paramNames = paramNamesList.ToArray();
             paramTypes = paramTypesList.ToArray();
             paramValues = paramValuesList.ToArray();
@@ -320,37 +587,21 @@ namespace CodeStack.SwEx.MacroFeature.Helpers
             }
         }
 
-        private string GetParameterValue(string[] paramNames, string[] paramValues, string name)
+        private string GetParameterValue(Dictionary<string, string> parameters, string name)
         {
-            if (!(paramNames is string[]))
+            if (parameters == null)
             {
-                throw new ArgumentNullException(nameof(paramNames));
+                throw new ArgumentNullException(nameof(parameters));
             }
 
-            if (!(paramValues is string[]))
-            {
-                throw new ArgumentNullException(nameof(paramValues));
-            }
+            string value;
 
-            var paramNamesList = paramNames.ToList();
-
-            var index = paramNamesList.IndexOf(name);
-
-            if (index != -1)
-            {
-                if (paramValues.Length > index)
-                {
-                    return paramValues[index];
-                }
-                else
-                {
-                    throw new IndexOutOfRangeException($"Parameter {name} doesn't have a value");
-                }
-            }
-            else
+            if (!parameters.TryGetValue(name, out value))
             {
                 throw new IndexOutOfRangeException($"Failed to read parameter {name}");
             }
+
+            return value;
         }
     }
 }

@@ -177,8 +177,16 @@ namespace CodeStack.SwEx.MacroFeature
 
             public void Dispose()
             {
-                Marshal.ReleaseComObject(Dimension);
-                Marshal.ReleaseComObject(DisplayDimension);
+                if (Marshal.IsComObject(Dimension))
+                {
+                    Marshal.ReleaseComObject(Dimension);
+                }
+
+                if (Marshal.IsComObject(DisplayDimension))
+                {
+                    Marshal.ReleaseComObject(DisplayDimension);
+                }
+
                 Dimension = null;
                 DisplayDimension = null;
             }
@@ -186,17 +194,14 @@ namespace CodeStack.SwEx.MacroFeature
 
         protected class DimensionDataCollection : ReadOnlyCollection<DimensionData>, IDisposable
         {
-            internal DimensionDataCollection(IMacroFeatureData featData)
+            internal DimensionDataCollection(IDisplayDimension[] dispDims)
                 : base(new List<DimensionData>())
             {
-                var dispDims = featData.GetDisplayDimensions() as object[];
-
                 if (dispDims != null)
                 {
                     for (int i = 0; i < dispDims.Length; i++)
                     {
                         this.Items.Add(new DimensionData(dispDims[i] as IDisplayDimension));
-                        dispDims[i] = 0;
                     }
                 }
             }
@@ -221,7 +226,7 @@ namespace CodeStack.SwEx.MacroFeature
 
         public MacroFeatureEx()
         {
-            m_ParamsParser = new MacroFeatureParametersParser();
+            m_ParamsParser = new MacroFeatureParametersParser(this.GetType());
         }
 
         [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
@@ -229,11 +234,20 @@ namespace CodeStack.SwEx.MacroFeature
         {
             var featDef = feature.GetDefinition() as IMacroFeatureData;
 
-            var parameters = GetParameters(featDef);
+            IDisplayDimension[] dispDims;
+            var parameters = GetParameters(feature, featDef, model, out dispDims);
 
             var res = OnRebuild(app, model, feature, parameters);
 
-            UpdateDimensions(app, model, feature, featDef, parameters);
+            UpdateDimensions(app, model, feature, dispDims, parameters);
+
+            if (dispDims != null)
+            {
+                for (int i = 0; i < dispDims.Length; i++)
+                {
+                    dispDims[i] = null;
+                }
+            }
 
             return res;
         }
@@ -244,9 +258,9 @@ namespace CodeStack.SwEx.MacroFeature
         }
 
         private void UpdateDimensions(ISldWorks app, IModelDoc2 model, IFeature feature,
-            IMacroFeatureData featData, TParams parameters)
+            IDisplayDimension[] dispDims, TParams parameters)
         {
-            using (var dimsColl = new DimensionDataCollection(featData))
+            using (var dimsColl = new DimensionDataCollection(dispDims))
             {
                 if (dimsColl.Any())
                 {
@@ -260,14 +274,49 @@ namespace CodeStack.SwEx.MacroFeature
         {
         }
 
-        protected TParams GetParameters(IMacroFeatureData featData)
+        protected TParams GetParameters(IFeature feat, IMacroFeatureData featData, IModelDoc2 model)
         {
-            return m_ParamsParser.GetParameters<TParams>(featData);
+            IDisplayDimension[] dispDims;
+            var parameters = GetParameters(feat, featData, model, out dispDims);
+
+            if (dispDims != null)
+            {
+                for (int i = 0; i < dispDims.Length; i++)
+                {
+                    
+                }
+            }
+
+            return parameters;
+        }
+        
+        protected void SetParameters(IModelDoc2 model, IFeature feat, IMacroFeatureData featData, TParams parameters)
+        {
+            MacroFeatureOutdateState_e state;
+            SetParameters(model, feat, featData, parameters, out state);
         }
 
-        protected void SetParameters(IMacroFeatureData featData, TParams parameters)
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="model"></param>
+        /// <param name="feat"></param>
+        /// <param name="parameters"></param>
+        /// <param name="isOutdated">Indicates that parameters version is outdated and feature needs to be replaced</param>
+        protected void SetParameters(IModelDoc2 model, IFeature feat, IMacroFeatureData featData, TParams parameters, out MacroFeatureOutdateState_e state)
         {
-            m_ParamsParser.SetParameters(featData, parameters);
+            m_ParamsParser.SetParameters(model, feat, featData, parameters, out state);
+        }
+
+        private TParams GetParameters(IFeature feat, IMacroFeatureData featData, IModelDoc2 model, out IDisplayDimension[] dispDims)
+        {
+            MacroFeatureOutdateState_e state;
+            return GetParameters(feat, featData, model, out dispDims, out state);
+        }
+
+        private TParams GetParameters(IFeature feat, IMacroFeatureData featData, IModelDoc2 model, out IDisplayDimension[] dispDims, out MacroFeatureOutdateState_e state)
+        {
+            return m_ParamsParser.GetParameters<TParams>(feat, featData, model, out dispDims, out state);
         }
     }
 

@@ -1,4 +1,11 @@
-﻿using CodeStack.SwEx.MacroFeature.Helpers;
+﻿//**********************
+//SwEx - development tools for SOLIDWORKS
+//Copyright(C) 2018 www.codestack.net
+//License: https://github.com/codestack-net-dev/swex-macrofeature/blob/master/LICENSE
+//Product URL: https://www.codestack.net/labs/solidworks/swex/macro-feature
+//**********************
+
+using CodeStack.SwEx.MacroFeature.Helpers;
 using CodeStack.SwEx.MacroFeature.Data;
 using System;
 using System.Collections.Generic;
@@ -30,8 +37,6 @@ namespace SolidWorks.Interop.sldworks
                 m_MathUtils.CreatePoint(new double[3]) as IMathPoint
             };
 
-            //MathVector extDirVec = null;
-
             if (extDir == null)
             {
                 var yVec = new Vector(0, 1, 0);
@@ -44,17 +49,6 @@ namespace SolidWorks.Interop.sldworks
                     extDir = yVec.Cross(dir);
                 }
             }
-
-            //var yVec = new Vector(0, 1, 0);
-            //if (dir.IsSame(yVec))
-            //{
-            //    var xVec = new double[] { 1, 0, 0 };
-            //    extDirVec = m_MathUtils.CreateVector(xVec) as MathVector;
-            //}
-            //else
-            //{
-            //    extDirVec = (m_MathUtils.CreateVector(yVec.ToArray()) as MathVector).Cross(dimDirVec) as MathVector;
-            //}
 
             var extDirVec = m_MathUtils.CreateVector(extDir.ToArray()) as MathVector;
             

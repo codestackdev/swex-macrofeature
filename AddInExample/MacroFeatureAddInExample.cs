@@ -113,7 +113,7 @@ namespace CodeStack.SwEx.MacroFeature.Example
             m_App.IActiveDoc2.FeatureManager.InsertComFeature<ParamsMacroFeature, ParamsMacroFeatureParams>(
                 new ParamsMacroFeatureParams()
                 {
-                    Param1 = Guid.NewGuid().ToString(),
+                    Param2 = Guid.NewGuid().ToString(),
                     EditDefinitionsCount = 0
                 });
         }
