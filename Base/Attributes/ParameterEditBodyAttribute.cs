@@ -14,8 +14,14 @@ namespace CodeStack.SwEx.MacroFeature.Attributes
 {
     public class ParameterEditBodyAttribute : Attribute
     {
-        public int BodyIndex { get; private set; }
+        [Obsolete("This property is deprecated")]
+        public int BodyIndex { get; private set; } = -1;
 
+        public ParameterEditBodyAttribute()
+        {
+        }
+
+        [Obsolete("This constructor is deprecated")]
         public ParameterEditBodyAttribute(int bodyIndex)
         {
             BodyIndex = bodyIndex;

@@ -25,8 +25,14 @@ namespace CodeStack.SwEx.MacroFeature.Attributes
         /// <summary>
         /// Index of the selection in the selection array
         /// </summary>
-        public int SelectionIndex { get; private set; }
+        [Obsolete("This property is deprecated")]
+        public int SelectionIndex { get; private set; } = -1;
 
+        public ParameterSelectionAttribute()
+        {
+        }
+
+        [Obsolete("This constructor is deprecated")]
         public ParameterSelectionAttribute(int selIndex)
         {
             SelectionIndex = selIndex;

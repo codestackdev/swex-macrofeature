@@ -15,6 +15,7 @@ using CodeStack.SwEx.MacroFeature.Mocks;
 using SolidWorks.Interop.sldworks;
 using SolidWorks.Interop.swconst;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -131,21 +132,22 @@ namespace CodeStack.SwEx.MacroFeature.Helpers
                 var resParams = Activator.CreateInstance(paramsType);
 
                 TraverseParametersDefinition(resParams.GetType(),
-                    (selIndex, prp) =>
+                    (prp) =>
                     {
-                        if (selObjects != null && selObjects.Length > selIndex)
-                        {
-                            var val = selObjects[selIndex];
-                            prp.SetValue(resParams, val, null);
-                        }
-                        else
-                        {
-                            throw new NullReferenceException(
-                                $"Referenced entity is missing at index {selIndex} for {prp.PropertyType.Name}");
-                        }
+                        AssignObjectsToProperty(resParams, selObjects, prp, parameters);
                     },
-                    (dimInd, dimType, prp) =>
+                    (dimType, prp) =>
                     {
+                        var dimIndices = GetObjectIndices(prp, parameters);
+
+                        if (dimIndices.Length != 1)
+                        {
+                            throw new InvalidOperationException(
+                                "It could only be one index associated with dimension");
+                        }
+
+                        var dimInd = dimIndices.First();
+
                         if (localDispDims.Length > dimInd)
                         {
                             var dispDim = localDispDims[dimInd];
@@ -165,17 +167,18 @@ namespace CodeStack.SwEx.MacroFeature.Helpers
                                 $"Dimension at index {dimInd} id not present in the macro feature");
                         }
                     },
-                    (bodyInd, prp) =>
+                    (prp) =>
                     {
-                        if (editBodies.Length > bodyInd)
-                        {
-                            prp.SetValue(resParams, editBodies[bodyInd], null);
-                        }
-                        else
-                        {
-                            throw new IndexOutOfRangeException(
-                                $"Edit body at index {bodyInd} id not present in the macro feature");
-                        }
+                        AssignObjectsToProperty(resParams, editBodies, prp, parameters);
+                        //if (editBodies.Length > bodyInd)
+                        //{
+                        //    prp.SetValue(resParams, editBodies[bodyInd], null);
+                        //}
+                        //else
+                        //{
+                        //    throw new IndexOutOfRangeException(
+                        //        $"Edit body at index {bodyInd} id not present in the macro feature");
+                        //}
                     },
                     prp =>
                     {
@@ -194,6 +197,100 @@ namespace CodeStack.SwEx.MacroFeature.Helpers
 
                 throw;
             }
+        }
+
+        private void AssignObjectsToProperty(object resParams, Array availableObjects, 
+            PropertyInfo prp, Dictionary<string, string> parameters)
+        {
+            var indices = GetObjectIndices(prp, parameters);
+
+            if (indices != null && indices.Any())
+            {
+                if (availableObjects != null && indices.All(i => availableObjects.Length > i))
+                {
+                    object val = null;
+
+                    if (typeof(IList).IsAssignableFrom(prp.GetType()))
+                    {
+                        var lst = prp.GetValue(resParams, null) as IList;
+                        if (lst != null)
+                        {
+                            lst.Clear();
+                        }
+                        else
+                        {
+                            lst = Activator.CreateInstance(prp.PropertyType) as IList;
+                        }
+
+                        val = lst;
+
+                        foreach (var obj in indices.Select(i => availableObjects.GetValue(i)))
+                        {
+                            lst.Add(obj);
+                        }
+                    }
+                    else
+                    {
+                        if (indices.Length > 1)
+                        {
+                            throw new InvalidOperationException($"Multiple selection indices at {prp.Name} could only be associated with the List");
+                        }
+
+                        val = availableObjects.GetValue(indices.First());
+                    }
+                    
+                    prp.SetValue(resParams, val, null);
+                }
+                else
+                {
+                    throw new NullReferenceException(
+                        $"Referenced entity is missing for {prp.PropertyType.Name}");
+                }
+            }
+        }
+
+        private int[] GetObjectIndices(PropertyInfo prp, Dictionary<string, string> parameters)
+        {
+            int[] indices = null;
+
+            string indValues;
+
+            if (parameters.TryGetValue(prp.Name, out indValues))
+            {
+                indices = indValues.Split(',').Select(i => int.Parse(i)).ToArray();
+            }
+            else
+            {
+                //throw new ParametersMismatchException("Object parameter (selection, edit body or dimension) indices have note been updated");
+
+                //TODO: remove - legacy
+                #region Legacy - remove
+
+                var selAtt = prp.TryGetAttribute<ParameterSelectionAttribute>();
+                var dimAtt = prp.TryGetAttribute<ParameterDimensionAttribute>();
+                var editBodyAtt = prp.TryGetAttribute<ParameterEditBodyAttribute>();
+
+                if (selAtt != null && selAtt.SelectionIndex != -1)
+                {
+                    indices = new int[] { selAtt.SelectionIndex };
+                }
+                else if (dimAtt != null && dimAtt.DimensionIndex != -1)
+                {
+                    indices = new int[] { dimAtt.DimensionIndex };
+                }
+                else if (editBodyAtt != null && editBodyAtt.BodyIndex != -1)
+                {
+                    indices = new int[] { editBodyAtt.BodyIndex };
+                }
+                else
+                {
+                    throw new ParametersMismatchException("Object parameter (selection, edit body or dimension) indices have note been updated");
+                }
+
+                #endregion
+            }
+
+            return indices;
         }
 
         internal static void ReleaseDisplayDimensions(IDisplayDimension[] dispDims)
@@ -425,40 +522,25 @@ namespace CodeStack.SwEx.MacroFeature.Helpers
             var paramNamesList = new List<string>();
             var paramTypesList = new List<int>();
             var paramValuesList = new List<string>();
-            var selectionList = new Dictionary<int, object>();
-            var dimsList = new Dictionary<int, Tuple<swDimensionType_e, double>>();
 
-            var editBodiesList = new Dictionary<int, IBody2>();
+            var selectionList = new List<Tuple<string, object>>();
+            var dimsList = new List<Tuple<string, Tuple<swDimensionType_e, double>>>();
+            var editBodiesList = new List<Tuple<string, IBody2>>();
 
             TraverseParametersDefinition(parameters.GetType(),
-                (selIndex, prp) =>
+                (prp) =>
                 {
-                    if (selectionList.ContainsKey(selIndex))
-                    {
-                        throw new InvalidOperationException(
-                            $"Duplicate declaration of the selection index {selIndex} for parameter {prp.Name}");
-                    }
-
-                    var val = prp.GetValue(parameters, null);
-
-                    if (val != null)
-                    {
-                        selectionList.Add(selIndex, val);
-                    }
-                    else
-                    {
-                        throw new NullReferenceException(
-                            $"Selection entity for {prp.PropertyType.Name} at selection index {selIndex} is null");
-                    }
+                    ReadObjectsValueFromProperty(parameters, prp, selectionList);
                 },
-                (dimInd, dimType, prp) =>
+                (dimType, prp) =>
                 {
                     var val = Convert.ToDouble(prp.GetValue(parameters, null));
-                    dimsList.Add(dimInd, new Tuple<swDimensionType_e, double>(dimType, val));
+                    dimsList.Add(new Tuple<string, Tuple<swDimensionType_e, double>>(
+                        prp.Name, new Tuple<swDimensionType_e, double>(dimType, val)));
                 },
-                (bodyInd, prp) => 
+                (prp) => 
                 {
-                    editBodiesList.Add(bodyInd, prp.GetValue(parameters, null) as IBody2);
+                    ReadObjectsValueFromProperty(parameters, prp, editBodiesList);
                 },
                 prp =>
                 {
@@ -483,14 +565,7 @@ namespace CodeStack.SwEx.MacroFeature.Helpers
                     paramTypesList.Add((int)paramType);
                     paramValuesList.Add(Convert.ToString(val));
                 });
-
-            if (!IsConsecutive(selectionList.Keys))
-            {
-                throw new InvalidOperationException("Selection elements indices are not consecutive");
-            }
-
-            var disps = selectionList.OrderBy(e => e.Key).Select(e => e.Value);
-
+            
             parameters.GetType().TryGetAttribute<ParametersVersionAttribute>(a => 
             {
                 var setVersionFunc = new Action<string, Version>((n, v) => 
@@ -513,38 +588,63 @@ namespace CodeStack.SwEx.MacroFeature.Helpers
                 setVersionFunc.Invoke(VERSION_DIMENSIONS_NAME, a.Version);
             });
 
+            AddParametersForObjects(selectionList, paramNamesList, paramTypesList, paramValuesList);
+            AddParametersForObjects(dimsList, paramNamesList, paramTypesList, paramValuesList);
+            AddParametersForObjects(editBodiesList, paramNamesList, paramTypesList, paramValuesList);
+
             paramNames = paramNamesList.ToArray();
             paramTypes = paramTypesList.ToArray();
             paramValues = paramValuesList.ToArray();
-            selection = disps.ToArray();
+            
+            selection = selectionList.Select(s => s.Item2).ToArray();
 
-            if (!IsConsecutive(dimsList.Keys))
-            {
-                throw new InvalidOperationException("Dimensions elements indices are not consecutive");
-            }
+            dimTypes = dimsList.Select(d => (int)d.Item2.Item1).ToArray();
+            dimValues = dimsList.Select(d => d.Item2.Item2).ToArray();
 
-            dimTypes = dimsList.OrderBy(d => d.Key).Select(d => (int)d.Value.Item1).ToArray();
-            dimValues = dimsList.OrderBy(d => d.Key).Select(d => d.Value.Item2).ToArray();
-
-            if (!IsConsecutive(editBodiesList.Keys))
-            {
-                throw new InvalidOperationException("Edit bodies elements indices are not consecutive");
-            }
-
-            editBodies = editBodiesList.OrderBy(d => d.Key).Select(d => d.Value).ToArray();
+            editBodies = editBodiesList.Select(d => d.Item2).ToArray();
         }
 
-        private static bool IsConsecutive(IEnumerable<int> selectionList)
+        private void AddParametersForObjects<T>(List<Tuple<string, T>> objects,
+            List<string> paramNamesList, List<int> paramTypesList,
+            List<string> paramValuesList)
         {
-            return !selectionList.OrderBy(k => k)
-                            .Select((i, j) => i - j)
-                            .Distinct().Skip(1).Any();
+            if (objects != null && objects.Any())
+            {
+                var paramsGroup = objects.GroupBy(o => o.Item1).ToDictionary(g => g.Key,
+                    g => string.Join(",", g.Select(e => objects.IndexOf(e)).ToArray()));
+
+                paramNamesList.AddRange(paramsGroup.Keys);
+                paramValuesList.AddRange(paramsGroup.Values);
+                paramTypesList.AddRange(Enumerable.Repeat((int)swMacroFeatureParamType_e.swMacroFeatureParamTypeString, paramsGroup.Count));
+            }
+        }
+
+        private void ReadObjectsValueFromProperty<T>(object parameters,
+            PropertyInfo prp, List<Tuple<string, T>> list)
+            where T : class
+        {
+            var val = prp.GetValue(parameters, null) as T;
+
+            if (val != null)
+            {
+                if (val is IList)
+                {
+                    foreach (T lstElem in val as IList)
+                    {
+                        list.Add(new Tuple<string, T>(prp.Name, lstElem));
+                    }
+                }
+                else
+                {
+                    list.Add(new Tuple<string, T>(prp.Name, val));
+                }
+            }
         }
 
         private void TraverseParametersDefinition(Type paramsType,
-            Action<int, PropertyInfo> selParamHandler,
-            Action<int, swDimensionType_e, PropertyInfo> dimParamHandler,
-            Action<int, PropertyInfo> editBodyHandler,
+            Action<PropertyInfo> selParamHandler,
+            Action<swDimensionType_e, PropertyInfo> dimParamHandler,
+            Action<PropertyInfo> editBodyHandler,
             Action<PropertyInfo> dataParamHandler)
         {
             foreach (var prp in paramsType.GetProperties())
@@ -557,20 +657,16 @@ namespace CodeStack.SwEx.MacroFeature.Helpers
 
                 if (selAtt != null)
                 {
-                    var selIndex = selAtt.SelectionIndex;
-
-                    selParamHandler.Invoke(selIndex, prp);
+                    selParamHandler.Invoke(prp);
                 }
                 else if (dimAtt != null)
                 {
                     var dimType = dimAtt.DimensionType;
-                    var dimInd = dimAtt.DimensionIndex;
-                    dimParamHandler.Invoke(dimInd, dimType, prp);
+                    dimParamHandler.Invoke(dimType, prp);
                 }
                 else if (editBodyAtt != null)
                 {
-                    var bodyInd = editBodyAtt.BodyIndex;
-                    editBodyHandler.Invoke(bodyInd, prp);
+                    editBodyHandler.Invoke(prp);
                 }
                 else
                 {

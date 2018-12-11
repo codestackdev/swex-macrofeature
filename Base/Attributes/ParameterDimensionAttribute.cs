@@ -22,10 +22,12 @@ namespace CodeStack.SwEx.MacroFeature.Attributes
             swDimensionType_e.swRadialDimension
         };
 
-        public int DimensionIndex { get; private set; }
-        public swDimensionType_e DimensionType { get; private set; }
+        [Obsolete("This property is deprecated")]
+        public int DimensionIndex { get; private set; } = -1;
 
-        public ParameterDimensionAttribute(swDimensionType_e dimType, int dimIndex)
+        internal swDimensionType_e DimensionType { get; private set; }
+
+        public ParameterDimensionAttribute(swDimensionType_e dimType)
         {
             if (!m_SupportedTypes.Contains(dimType))
             {
@@ -33,6 +35,12 @@ namespace CodeStack.SwEx.MacroFeature.Attributes
             }
 
             DimensionType = dimType;
+        }
+
+        [Obsolete("This constructor is deprecated")]
+        public ParameterDimensionAttribute(swDimensionType_e dimType, int dimIndex) 
+            : this(dimType)
+        {
             DimensionIndex = dimIndex;
         }
     }
