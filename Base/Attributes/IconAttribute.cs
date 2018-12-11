@@ -19,9 +19,9 @@ namespace CodeStack.SwEx.MacroFeature.Attributes
     [AttributeUsage(AttributeTargets.Class)]
     public class IconAttribute : Attribute
     {
-        internal IIcon Regular { get; private set; }
-        internal IIcon Suppressed { get; private set; }
-        internal IIcon Highlighted { get; private set; }
+        internal MacroFeatureIcon Regular { get; private set; }
+        internal MacroFeatureIcon Suppressed { get; private set; }
+        internal MacroFeatureIcon Highlighted { get; private set; }
 
         internal string IconFolderName { get; private set; }
 

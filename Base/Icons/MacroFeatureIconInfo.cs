@@ -36,7 +36,7 @@ namespace CodeStack.SwEx.MacroFeature.Icons
 
             if (string.IsNullOrEmpty(iconFolderName))
             {
-                iconFolderName = $"{macroFeatType.FullName}\\MacroFeatureIcons";
+                iconFolderName = $"CodeStack\\SwEx.MacroFeature\\{macroFeatType.FullName}\\Icons";
             }
 
             return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData),

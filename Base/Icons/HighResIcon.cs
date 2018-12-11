@@ -35,5 +35,15 @@ namespace CodeStack.SwEx.MacroFeature.Icons
         {
             yield return new IconSizeInfo(Small, MacroFeatureIconInfo.Size, BaseName);
         }
+
+        public override MacroFeatureIcon Clone(string baseName)
+        {
+            return new HighResIcon(baseName)
+            {
+                Large = Large,
+                Medium = Medium,
+                Small = Small
+            };
+        }
     }
 }

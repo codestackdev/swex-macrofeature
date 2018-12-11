@@ -21,7 +21,15 @@ namespace CodeStack.SwEx.MacroFeature.Icons
         }
 
         internal Image Icon { get; set; }
-        
+
+        public override MacroFeatureIcon Clone(string baseName)
+        {
+            return new MasterIcon(baseName)
+            {
+                Icon = Icon
+            };
+        }
+
         public override IEnumerable<IconSizeInfo> GetHighResolutionIconSizes()
         {
             yield return new IconSizeInfo(Icon, MacroFeatureIconInfo.SizeHighResSmall, BaseName);

@@ -15,7 +15,7 @@ namespace CodeStack.SwEx.MacroFeature.Attributes
     public class ParameterEditBodyAttribute : Attribute
     {
         [Obsolete("This property is deprecated")]
-        public int BodyIndex { get; private set; } = -1;
+        internal int BodyIndex { get; private set; } = -1;
 
         public ParameterEditBodyAttribute()
         {

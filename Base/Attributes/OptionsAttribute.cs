@@ -15,13 +15,22 @@ namespace CodeStack.SwEx.MacroFeature.Attributes
 {
     public class OptionsAttribute : Attribute
     {
-        public swMacroFeatureOptions_e Flags { get; private set; }
-        public string BaseName { get; private set; }
+        internal swMacroFeatureOptions_e Flags { get; private set; }
+        internal string BaseName { get; private set; }
+        internal string Provider { get; private set; }
 
-        public OptionsAttribute(string baseName, swMacroFeatureOptions_e flags = swMacroFeatureOptions_e.swMacroFeatureByDefault)
+        public OptionsAttribute(string baseName,
+            swMacroFeatureOptions_e flags = swMacroFeatureOptions_e.swMacroFeatureByDefault)
+            : this(baseName, "", flags)
+        {
+        }
+
+        public OptionsAttribute(string baseName, string provider,
+            swMacroFeatureOptions_e flags = swMacroFeatureOptions_e.swMacroFeatureByDefault)
         {
             Flags = flags;
             BaseName = baseName;
+            Provider = provider;
         }
     }
 }

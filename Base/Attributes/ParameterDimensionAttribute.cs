@@ -23,7 +23,7 @@ namespace CodeStack.SwEx.MacroFeature.Attributes
         };
 
         [Obsolete("This property is deprecated")]
-        public int DimensionIndex { get; private set; } = -1;
+        internal int DimensionIndex { get; private set; } = -1;
 
         internal swDimensionType_e DimensionType { get; private set; }
 

@@ -11,6 +11,7 @@ using CodeStack.SwEx.MacroFeature.Attributes;
 using CodeStack.SwEx.MacroFeature.Base;
 using CodeStack.SwEx.MacroFeature.Helpers;
 using CodeStack.SwEx.MacroFeature.Icons;
+using CodeStack.SwEx.MacroFeature.Properties;
 using SolidWorks.Interop.sldworks;
 using SolidWorks.Interop.swconst;
 using SolidWorks.Interop.swpublished;
@@ -26,11 +27,18 @@ using System.Text;
 namespace CodeStack.SwEx.MacroFeature
 {
     public abstract class MacroFeatureEx : ISwComFeature
-    {       
+    {
         #region Initiation
 
+        private string m_Provider;
+
         public MacroFeatureEx()
-        {   
+        {
+            this.GetType().TryGetAttribute<OptionsAttribute>(a =>
+            {
+                m_Provider = a.Provider;
+            });
+
             TryCreateIcons();
         }
         
@@ -39,9 +47,9 @@ namespace CodeStack.SwEx.MacroFeature
             var iconsConverter = new IconsConverter(
                 MacroFeatureIconInfo.GetLocation(this.GetType()), false);
 
-            IIcon regIcon = null;
-            IIcon highIcon = null;
-            IIcon suppIcon = null;
+            MacroFeatureIcon regIcon = null;
+            MacroFeatureIcon highIcon = null;
+            MacroFeatureIcon suppIcon = null;
 
             this.GetType().TryGetAttribute<IconAttribute>(a =>
             {
@@ -52,17 +60,20 @@ namespace CodeStack.SwEx.MacroFeature
 
             if (regIcon == null)
             {
-                //TODO: load default
+                regIcon = new MasterIcon(MacroFeatureIconInfo.RegularName)
+                {
+                    Icon = Resources.default_icon
+                };
             }
 
             if (highIcon == null)
             {
-                highIcon = regIcon;
+                highIcon = regIcon.Clone(MacroFeatureIconInfo.HighlightedName);
             }
 
             if (suppIcon == null)
             {
-                suppIcon = regIcon;
+                suppIcon = regIcon.Clone(MacroFeatureIconInfo.SuppressedName);
             }
 
             //Creation of icons may fail if user doesn't have write permissions or icon is locked
@@ -124,9 +135,11 @@ namespace CodeStack.SwEx.MacroFeature
 
         [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
         public object Regenerate(object app, object modelDoc, object feature)
-        {            
+        {
+            SetProvider(feature);
+
             var res = OnRebuild(app as ISldWorks, modelDoc as IModelDoc2, feature as IFeature);
-            
+
             if (res != null)
             {
                 return res.GetResult();
@@ -136,7 +149,20 @@ namespace CodeStack.SwEx.MacroFeature
                 return null;
             }
         }
-        
+
+        private void SetProvider(object feature)
+        {
+            if (!string.IsNullOrEmpty(m_Provider))
+            {
+                var featData = (feature as IFeature).GetDefinition() as IMacroFeatureData;
+
+                if (featData.Provider != m_Provider)
+                {
+                    featData.Provider = m_Provider;
+                }
+            }
+        }
+
         [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
         public object Security(object app, object modelDoc, object feature)
         {

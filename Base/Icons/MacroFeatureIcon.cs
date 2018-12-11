@@ -34,5 +34,7 @@ namespace CodeStack.SwEx.MacroFeature.Icons
         public abstract IEnumerable<IconSizeInfo> GetHighResolutionIconSizes();
 
         public abstract IEnumerable<IconSizeInfo> GetIconSizes();
+
+        public abstract MacroFeatureIcon Clone(string baseName);
     }
 }

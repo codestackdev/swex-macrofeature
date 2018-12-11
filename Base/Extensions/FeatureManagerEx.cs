@@ -184,10 +184,12 @@ namespace SolidWorks.Interop.sldworks
             where TMacroFeature : MacroFeatureEx
         {
             var options = swMacroFeatureOptions_e.swMacroFeatureByDefault;
+            var provider = "";
 
             typeof(TMacroFeature).TryGetAttribute<OptionsAttribute>(a =>
             {
                 options = a.Flags;
+                provider = a.Provider;
             });
 
             var baseName = MacroFeatureInfo.GetBaseName<TMacroFeature>();
@@ -210,11 +212,11 @@ namespace SolidWorks.Interop.sldworks
                     Debug.Assert(selRes);
                 }
 
-                var res = featMgr.InsertMacroFeature3(baseName,
+                var feat = featMgr.InsertMacroFeature3(baseName,
                     progId, null, paramNames, paramTypes,
                     paramValues, dimTypes, dimValues, editBodies, icons, (int)options) as IFeature;
-
-                return res;
+                
+                return feat;
             }
         }
     }
