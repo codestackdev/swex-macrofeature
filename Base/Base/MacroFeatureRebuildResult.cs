@@ -1,5 +1,5 @@
 ﻿//**********************
-//SwEx - development tools for SOLIDWORKS
+//SwEx.MacroFeature - framework for developing macro features in SOLIDWORKS
 //Copyright(C) 2018 www.codestack.net
 //License: https://github.com/codestack-net-dev/swex-macrofeature/blob/master/LICENSE
 //Product URL: https://www.codestack.net/labs/solidworks/swex/macro-feature
@@ -22,9 +22,14 @@ namespace CodeStack.SwEx.MacroFeature.Base
 
         public static MacroFeatureRebuildResult FromBody(IBody2 body, IMacroFeatureData featData, bool updateEntityIds = true)
         {
-            return new MacroFeatureRebuildBodyResult(body, featData, updateEntityIds);
+            return new MacroFeatureRebuildBodyResult(featData, updateEntityIds, body);
         }
-        
+
+        public static MacroFeatureRebuildResult FromBodies(IBody2[] bodies, IMacroFeatureData featData, bool updateEntityIds = true)
+        {
+            return new MacroFeatureRebuildBodyResult(featData, updateEntityIds, bodies);
+        }
+
         public static MacroFeatureRebuildResult FromPattern(IBody2[] bodiesPattern)
         {
             return new MacroFeatureRebuildPatternResult(bodiesPattern);

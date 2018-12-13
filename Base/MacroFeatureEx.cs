@@ -1,5 +1,5 @@
 ﻿//**********************
-//SwEx - development tools for SOLIDWORKS
+//SwEx.MacroFeature - framework for developing macro features in SOLIDWORKS
 //Copyright(C) 2018 www.codestack.net
 //License: https://github.com/codestack-net-dev/swex-macrofeature/blob/master/LICENSE
 //Product URL: https://www.codestack.net/labs/solidworks/swex/macro-feature
@@ -26,6 +26,10 @@ using System.Text;
 
 namespace CodeStack.SwEx.MacroFeature
 {
+    /// <summary>
+    /// Represents basic macro feature class
+    /// </summary>
+    /// <remarks>Mark the class as COM visible with <see cref="ComVisibleAttribute"/></remarks>
     public abstract class MacroFeatureEx : ISwComFeature
     {
         #region Initiation
@@ -176,6 +180,14 @@ namespace CodeStack.SwEx.MacroFeature
             return true;
         }
 
+        /// <summary>
+        /// Called when macro feature is rebuilding
+        /// </summary>
+        /// <param name="app">Pointer to the SOLIDWORKS application</param>
+        /// <param name="model">Pointer to the document where the macro feature being rebuild</param>
+        /// <param name="feature">Pointer to the feature</param>
+        /// <returns>Result of the operation. Use static methods of <see cref="MacroFeatureRebuildResult"/>
+        /// class to generate results</returns>
         protected virtual MacroFeatureRebuildResult OnRebuild(ISldWorks app, IModelDoc2 model, IFeature feature)
         {
             return null;

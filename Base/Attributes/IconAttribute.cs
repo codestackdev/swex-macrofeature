@@ -1,21 +1,20 @@
 ﻿//**********************
-//SwEx - development tools for SOLIDWORKS
+//SwEx.MacroFeature - framework for developing macro features in SOLIDWORKS
 //Copyright(C) 2018 www.codestack.net
 //License: https://github.com/codestack-net-dev/swex-macrofeature/blob/master/LICENSE
 //Product URL: https://www.codestack.net/labs/solidworks/swex/macro-feature
 //**********************
 
-using CodeStack.SwEx.Common.Icons;
 using CodeStack.SwEx.Common.Reflection;
 using CodeStack.SwEx.MacroFeature.Icons;
 using System;
-using System.Collections.Generic;
 using System.Drawing;
-using System.Linq;
-using System.Text;
 
 namespace CodeStack.SwEx.MacroFeature.Attributes
 {
+    /// <summary>
+    /// Specifies the icon for macro feature to be displayed in the Feature Manager Tree
+    /// </summary>
     [AttributeUsage(AttributeTargets.Class)]
     public class IconAttribute : Attribute
     {
@@ -25,6 +24,14 @@ namespace CodeStack.SwEx.MacroFeature.Attributes
 
         internal string IconFolderName { get; private set; }
 
+        /// <summary>
+        /// Specifies the master icon for all macro feature states
+        /// </summary>
+        /// <param name="resType">Resource type</param>
+        /// <param name="resName">Name of the resource representing the icon</param>
+        /// <param name="iconFolderName">Folder name to store the icons.
+        /// This folder will be created in the Program Data.
+        /// If empty value is specified icon will be created at the default location</param>
         public IconAttribute(Type resType, string resName, string iconFolderName = "")
         {
             Regular = CreateIcon(resType, resName, MacroFeatureIconInfo.RegularName);
@@ -33,7 +40,11 @@ namespace CodeStack.SwEx.MacroFeature.Attributes
 
             IconFolderName = iconFolderName;
         }
-        
+
+        ///<inheritdoc cref="IconAttribute(Type, string, string)"/>
+        /// <param name="smallResName">Name of the resource representing the small size icon</param>
+        /// <param name="mediumResName">Name of the resource representing the medium size icon</param>
+        /// <param name="largeResName">Name of the resource representing the large size icon</param>
         public IconAttribute(Type resType, string smallResName, string mediumResName,
             string largeResName, string iconFolderName = "")
         {

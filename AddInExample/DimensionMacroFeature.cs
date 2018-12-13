@@ -22,7 +22,6 @@ namespace CodeStack.SwEx.MacroFeature.Example
     }
 
     [ComVisible(true)]
-    [Icon(typeof(Resources), nameof(Resources.codestack), "CodeStack\\MacroFeatureExample\\Icons")]
     public class DimensionMacroFeature : MacroFeatureEx<DimensionMacroFeatureParams>
     {
         protected override MacroFeatureRebuildResult OnRebuild(ISldWorks app, IModelDoc2 model,

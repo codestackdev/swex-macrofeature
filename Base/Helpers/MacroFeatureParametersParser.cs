@@ -1,5 +1,5 @@
 ﻿//**********************
-//SwEx - development tools for SOLIDWORKS
+//SwEx.MacroFeature - framework for developing macro features in SOLIDWORKS
 //Copyright(C) 2018 www.codestack.net
 //License: https://github.com/codestack-net-dev/swex-macrofeature/blob/master/LICENSE
 //Product URL: https://www.codestack.net/labs/solidworks/swex/macro-feature
@@ -170,15 +170,6 @@ namespace CodeStack.SwEx.MacroFeature.Helpers
                     (prp) =>
                     {
                         AssignObjectsToProperty(resParams, editBodies, prp, parameters);
-                        //if (editBodies.Length > bodyInd)
-                        //{
-                        //    prp.SetValue(resParams, editBodies[bodyInd], null);
-                        //}
-                        //else
-                        //{
-                        //    throw new IndexOutOfRangeException(
-                        //        $"Edit body at index {bodyInd} id not present in the macro feature");
-                        //}
                     },
                     prp =>
                     {
@@ -199,53 +190,72 @@ namespace CodeStack.SwEx.MacroFeature.Helpers
             }
         }
 
-        private void AssignObjectsToProperty(object resParams, Array availableObjects, 
+        private void AssignObjectsToProperty(object resParams, Array availableObjects,
             PropertyInfo prp, Dictionary<string, string> parameters)
         {
             var indices = GetObjectIndices(prp, parameters);
 
             if (indices != null && indices.Any())
             {
-                if (availableObjects != null && indices.All(i => availableObjects.Length > i))
-                {
-                    object val = null;
+                var isEmpty = availableObjects == null && indices.All(i => i == -1);
 
-                    if (typeof(IList).IsAssignableFrom(prp.GetType()))
+                object val = null;
+
+                if (!isEmpty)
+                {
+                    if ((availableObjects != null && indices.All(i => availableObjects.Length > i)))
                     {
-                        var lst = prp.GetValue(resParams, null) as IList;
-                        if (lst != null)
+                        if (typeof(IList).IsAssignableFrom(prp.PropertyType))
                         {
-                            lst.Clear();
+                            var lst = prp.GetValue(resParams, null) as IList;
+
+                            if (lst != null)
+                            {
+                                lst.Clear();
+                            }
+                            else
+                            {
+                                lst = Activator.CreateInstance(prp.PropertyType) as IList;
+                            }
+
+                            val = lst;
+
+                            foreach (var obj in indices.Select(i =>
+                            {
+                                if (i < 0 || availableObjects == null)
+                                {
+                                    throw new IndexOutOfRangeException($"Index {i} is out of range for arrays");
+                                }
+
+                                return availableObjects.GetValue(i);
+                            }))
+                            {
+                                lst.Add(obj);
+                            }
                         }
                         else
                         {
-                            lst = Activator.CreateInstance(prp.PropertyType) as IList;
-                        }
+                            if (indices.Length > 1)
+                            {
+                                throw new InvalidOperationException($"Multiple selection indices at {prp.Name} could only be associated with the List");
+                            }
 
-                        val = lst;
-
-                        foreach (var obj in indices.Select(i => availableObjects.GetValue(i)))
-                        {
-                            lst.Add(obj);
+                            val = availableObjects.GetValue(indices.First());
                         }
                     }
                     else
                     {
-                        if (indices.Length > 1)
-                        {
-                            throw new InvalidOperationException($"Multiple selection indices at {prp.Name} could only be associated with the List");
-                        }
-
-                        val = availableObjects.GetValue(indices.First());
+                        throw new NullReferenceException(
+                            $"Referenced entity is missing for {prp.PropertyType.Name}");
                     }
-                    
-                    prp.SetValue(resParams, val, null);
+
                 }
-                else
-                {
-                    throw new NullReferenceException(
-                        $"Referenced entity is missing for {prp.PropertyType.Name}");
-                }
+
+                prp.SetValue(resParams, val, null);
+            }
+            else
+            {
+                throw new NullReferenceException($"Indices are not set for {prp.PropertyType.Name}");
             }
         }
 
@@ -595,23 +605,24 @@ namespace CodeStack.SwEx.MacroFeature.Helpers
             paramNames = paramNamesList.ToArray();
             paramTypes = paramTypesList.ToArray();
             paramValues = paramValuesList.ToArray();
-            
-            selection = selectionList.Select(s => s.Item2).ToArray();
+
+            selection = selectionList.Select(s => s.Item2).Where(s => s != null).ToArray();
 
             dimTypes = dimsList.Select(d => (int)d.Item2.Item1).ToArray();
             dimValues = dimsList.Select(d => d.Item2.Item2).ToArray();
 
-            editBodies = editBodiesList.Select(d => d.Item2).ToArray();
+            editBodies = editBodiesList.Select(b => b.Item2).Where(b => b != null).ToArray();
         }
 
         private void AddParametersForObjects<T>(List<Tuple<string, T>> objects,
             List<string> paramNamesList, List<int> paramTypesList,
             List<string> paramValuesList)
+            where T : class
         {
             if (objects != null && objects.Any())
             {
                 var paramsGroup = objects.GroupBy(o => o.Item1).ToDictionary(g => g.Key,
-                    g => string.Join(",", g.Select(e => objects.IndexOf(e)).ToArray()));
+                    g => string.Join(",", g.Select(e => e.Item2 != null ? objects.IndexOf(e) : -1).ToArray()));
 
                 paramNamesList.AddRange(paramsGroup.Keys);
                 paramValuesList.AddRange(paramsGroup.Values);
@@ -623,21 +634,18 @@ namespace CodeStack.SwEx.MacroFeature.Helpers
             PropertyInfo prp, List<Tuple<string, T>> list)
             where T : class
         {
-            var val = prp.GetValue(parameters, null) as T;
+            var val = prp.GetValue(parameters, null);
 
-            if (val != null)
+            if (val is IList)
             {
-                if (val is IList)
+                foreach (T lstElem in val as IList)
                 {
-                    foreach (T lstElem in val as IList)
-                    {
-                        list.Add(new Tuple<string, T>(prp.Name, lstElem));
-                    }
+                    list.Add(new Tuple<string, T>(prp.Name, lstElem));
                 }
-                else
-                {
-                    list.Add(new Tuple<string, T>(prp.Name, val));
-                }
+            }
+            else
+            {
+                list.Add(new Tuple<string, T>(prp.Name, val as T));
             }
         }
 
