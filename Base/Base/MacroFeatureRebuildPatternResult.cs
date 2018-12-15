@@ -8,12 +8,14 @@
 using SolidWorks.Interop.sldworks;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Text;
 
 namespace CodeStack.SwEx.MacroFeature.Base
 {
     [Obsolete("Deprecated. Use MacroFeatureRebuildBodyResult instead")]
+    [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
     public class MacroFeatureRebuildPatternResult : MacroFeatureRebuildResult
     {
         internal MacroFeatureRebuildPatternResult(IBody2[] bodiesPattern) : base(bodiesPattern)

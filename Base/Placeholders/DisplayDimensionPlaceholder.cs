@@ -12,6 +12,7 @@ using System.ComponentModel;
 namespace CodeStack.SwEx.MacroFeature.Mocks
 {
     [Obsolete("Deprecated. Use DisplayDimensionPlaceholder instead")]
+    [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
     public class DisplayDimensionEmpty : Placeholders.DisplayDimensionPlaceholder
     {
     }
@@ -54,7 +55,9 @@ namespace CodeStack.SwEx.MacroFeature.Placeholders
         public bool ExtensionLineSameAsLeaderStyle { get; set; }
         [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
         public bool ExtensionLineUseDocumentDisplay { get; set; }
-        [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]public bool Foreshortened { get; set; }
+        [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
+        public bool Foreshortened { get; set; }
+        [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
         public bool GridBubble { get; set; }
         [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
         public int HorizontalJustification { get; set; }

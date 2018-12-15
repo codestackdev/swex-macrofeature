@@ -15,7 +15,16 @@ life of the project.</para>
 					<listItem>
 						<para><link xlink:href="v0-1-0" /></para>
 					</listItem>
-
+          <listItem>
+            <para>
+              <link xlink:href="v0-2-0" />
+            </para>
+          </listItem>
+          <listItem>
+            <para>
+              <link xlink:href="v0-3-0" />
+            </para>
+          </listItem>
 				</list>
 
 			</content>

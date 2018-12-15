@@ -12,6 +12,7 @@ using System.ComponentModel;
 namespace CodeStack.SwEx.MacroFeature.Mocks
 {
     [Obsolete("Deprecated. Use DimensionEmpty instead")]
+    [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
     public class DimensionEmpty : Placeholders.DimensionPlaceholder
     {
     }

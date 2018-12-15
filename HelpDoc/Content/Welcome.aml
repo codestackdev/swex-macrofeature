@@ -4,9 +4,5 @@
     <introduction>
       <para>SwEx.MacroFeature enables SOLIDWORKS developers to simplify the development of custom macro features</para>
     </introduction>
-
-    <relatedTopics>
-      <link xlink:href="version-history" />
-    </relatedTopics>
   </developerConceptualDocument>
 </topic>

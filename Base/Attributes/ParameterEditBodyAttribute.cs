@@ -6,6 +6,7 @@
 //**********************
 
 using System;
+using System.ComponentModel;
 
 namespace CodeStack.SwEx.MacroFeature.Attributes
 {
@@ -32,6 +33,7 @@ namespace CodeStack.SwEx.MacroFeature.Attributes
         }
 
         [Obsolete("This constructor is deprecated")]
+        [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
         public ParameterEditBodyAttribute(int bodyIndex)
         {
             BodyIndex = bodyIndex;

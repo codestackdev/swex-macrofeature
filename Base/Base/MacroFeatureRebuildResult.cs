@@ -8,6 +8,7 @@
 using SolidWorks.Interop.sldworks;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Text;
 
@@ -50,6 +51,7 @@ namespace CodeStack.SwEx.MacroFeature.Base
         }
 
         [Obsolete("Deprecated. Use FromBodies method instead")]
+        [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
         public static MacroFeatureRebuildResult FromPattern(IBody2[] bodiesPattern)
         {
             return new MacroFeatureRebuildPatternResult(bodiesPattern);

@@ -15,6 +15,7 @@ using System.ComponentModel;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
+using CodeStack.SwEx.MacroFeature.Data;
 
 namespace CodeStack.SwEx.MacroFeature
 {
@@ -24,79 +25,6 @@ namespace CodeStack.SwEx.MacroFeature
     public abstract class MacroFeatureEx<TParams> : MacroFeatureEx
         where TParams : class, new()
     {
-        /// <summary>
-        /// Structure representing macro feature dimension
-        /// </summary>
-        /// <remarks>This is passed to <see cref="OnSetDimensions(ISldWorks, IModelDoc2, IFeature, DimensionDataCollection, TParams)"/>
-        /// in the rebuild operation</remarks>
-        protected class DimensionData : IDisposable
-        {
-            /// <summary>
-            /// Pointer to display dimension
-            /// </summary>
-            public IDisplayDimension DisplayDimension { get; private set; }
-
-            /// <summary>
-            /// Pointer to dimension
-            /// </summary>
-            public IDimension Dimension { get; private set; }
-
-            internal DimensionData(IDisplayDimension dispDim)
-            {
-                DisplayDimension = dispDim;
-                Dimension = dispDim.GetDimension2(0);
-            }
-
-            public void Dispose()
-            {
-                if (Marshal.IsComObject(Dimension))
-                {
-                    Marshal.ReleaseComObject(Dimension);
-                }
-
-                if (Marshal.IsComObject(DisplayDimension))
-                {
-                    Marshal.ReleaseComObject(DisplayDimension);
-                }
-
-                Dimension = null;
-                DisplayDimension = null;
-            }
-        }
-
-        /// <summary>
-        /// Collection of dimensions associated with this macro feature
-        /// </summary>
-        protected class DimensionDataCollection : ReadOnlyCollection<DimensionData>, IDisposable
-        {
-            internal DimensionDataCollection(IDisplayDimension[] dispDims)
-                : base(new List<DimensionData>())
-            {
-                if (dispDims != null)
-                {
-                    for (int i = 0; i < dispDims.Length; i++)
-                    {
-                        this.Items.Add(new DimensionData(dispDims[i] as IDisplayDimension));
-                    }
-                }
-            }
-
-            public void Dispose()
-            {
-                if (Count > 0)
-                {
-                    foreach (var item in this.Items)
-                    {
-                        item.Dispose();
-                    }
-
-                    GC.Collect();
-                    GC.Collect();
-                    GC.WaitForPendingFinalizers();
-                }
-            }
-        }
-
         private readonly MacroFeatureParametersParser m_ParamsParser;
 
         /// <summary>

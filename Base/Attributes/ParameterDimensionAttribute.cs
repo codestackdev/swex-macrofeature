@@ -8,6 +8,7 @@
 using SolidWorks.Interop.swconst;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Text;
 
@@ -52,6 +53,7 @@ namespace CodeStack.SwEx.MacroFeature.Attributes
         }
 
         [Obsolete("This constructor is deprecated")]
+        [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
         public ParameterDimensionAttribute(swDimensionType_e dimType, int dimIndex) 
             : this(dimType)
         {

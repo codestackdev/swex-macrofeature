@@ -28,6 +28,7 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <DocumentationFile>bin\Release\CodeStack.SwEx.MacroFeature.xml</DocumentationFile>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="CodeStack.SwEx.Common, Version=0.9.0.0, Culture=neutral, PublicKeyToken=a46023996d4724e7, processorArchitecture=MSIL">
@@ -76,6 +77,8 @@
     <Compile Include="Base\MacroFeatureRebuldStatusResult.cs" />
     <Compile Include="Core\MacroFeatureExOfTParams.cs" />
     <Compile Include="Core\MacroFeatureExOfTParamsTHandler.cs" />
+    <Compile Include="Data\DimensionData.cs" />
+    <Compile Include="Data\DimensionDataCollection.cs" />
     <Compile Include="Exceptions\FutureVersionParametersException.cs" />
     <Compile Include="Exceptions\ParametersMismatchException.cs" />
     <Compile Include="Extensions\ModelerEx.cs" />
