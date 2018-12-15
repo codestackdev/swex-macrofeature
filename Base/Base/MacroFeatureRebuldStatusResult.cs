@@ -12,6 +12,9 @@ using System.Text;
 
 namespace CodeStack.SwEx.MacroFeature.Base
 {
+    /// <summary>
+    /// Represents the status result from macro feature and optional error message
+    /// </summary>
     public class MacroFeatureRebuldStatusResult : MacroFeatureRebuildResult
     {
         private static object GetResult(bool status, string error = "")

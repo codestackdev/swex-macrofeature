@@ -14,10 +14,10 @@ namespace CodeStack.SwEx.MacroFeature.Example
 {
     public class BoundingCylinderMacroFeatureParams
     {
-        [ParameterEditBody(0)]
+        [ParameterEditBody]
         public IBody2 InputBody { get; set; }
 
-        [ParameterDimension(swDimensionType_e.swLinearDimension, 0)]
+        [ParameterDimension(swDimensionType_e.swLinearDimension)]
         public double ExtraHeight { get; set; } = 0.01;
 
         public bool AddHeight { get; set; }

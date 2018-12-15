@@ -7,13 +7,12 @@
 
 using CodeStack.SwEx.MacroFeature.Helpers;
 using CodeStack.SwEx.MacroFeature.Data;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 namespace SolidWorks.Interop.sldworks
 {
+    /// <summary>
+    /// Extension methods of <see href="http://help.solidworks.com/2016/english/api/sldworksapi/solidworks.interop.sldworks~solidworks.interop.sldworks.idimension.html">IDimension</see> interface
+    /// </summary>
     public static class DimensionEx
     {
         private static readonly IMathUtility m_MathUtils;
@@ -23,6 +22,15 @@ namespace SolidWorks.Interop.sldworks
             m_MathUtils = Context.CurrentApp.IGetMathUtility();
         }
 
+        /// <summary>
+        /// Sets the direction of the macro feature dimension.
+        /// </summary>
+        /// <param name="dim">Pointer to dimension. Usually retrieved from <see cref="CodeStack.SwEx.MacroFeature.MacroFeatureEx{TParams}.DimensionData.Dimension"/></param>
+        /// <param name="originPt">Dimension starting attach point</param>
+        /// <param name="dir">Direction of the dimension</param>
+        /// <param name="length">Length of the dimension (usually equal to its value)</param>
+        /// <param name="extDir">Optional direction of extension line</param>
+        /// <remarks>Call this method within the <see cref="CodeStack.SwEx.MacroFeature.MacroFeatureEx{TParams}.OnSetDimensions(ISldWorks, IModelDoc2, IFeature, CodeStack.SwEx.MacroFeature.MacroFeatureEx{TParams}.DimensionDataCollection, TParams)"/></remarks>
         public static void SetDirection(this IDimension dim,
             Point originPt, Vector dir, double length, Vector extDir = null)
         {

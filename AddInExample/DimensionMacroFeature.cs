@@ -14,10 +14,10 @@ namespace CodeStack.SwEx.MacroFeature.Example
 {
     public class DimensionMacroFeatureParams
     {
-        [ParameterDimension(swDimensionType_e.swLinearDimension, 0)]
+        [ParameterDimension(swDimensionType_e.swLinearDimension)]
         public double RefDimension { get; set; } = 0.01;
 
-        [ParameterDimension(swDimensionType_e.swLinearDimension, 1)]
+        [ParameterDimension(swDimensionType_e.swLinearDimension)]
         public double RefCalcDimension { get; set; }
     }
 

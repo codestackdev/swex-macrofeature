@@ -22,6 +22,9 @@ using System.Text;
 
 namespace SolidWorks.Interop.sldworks
 {
+    /// <summary>
+    /// Extensions methods of <see href="http://help.solidworks.com/2016/english/api/sldworksapi/solidworks.interop.sldworks~solidworks.interop.sldworks.ifeaturemanager_members.html">IFeatureManager</see> interface
+    /// </summary>
     public static class FeatureManagerEx
     {
         private static readonly MacroFeatureParametersParser m_ParamsParser;
@@ -39,17 +42,8 @@ namespace SolidWorks.Interop.sldworks
         /// Inserts new macro feature
         /// </summary>
         /// <typeparam name="TMacroFeature">Definition of COM macro feature</typeparam>
-        /// <typeparam name="TParams">Type of parameters to serialize to macro feature</typeparam>
-        /// <param name="featMgr">Pointer to Feature manager</param>
-        /// <param name="parameters">Parameters to serialize to macro feature</param>
+        /// <param name="featMgr">Pointer to feature manager</param>
         /// <returns>Newly created feature</returns>
-        public static IFeature InsertComFeature<TMacroFeature, TParams>(this IFeatureManager featMgr, TParams parameters)
-            where TMacroFeature : MacroFeatureEx<TParams>
-            where TParams : class, new()
-        {
-            return InsertComFeatureWithParameters<TMacroFeature>(featMgr, parameters);
-        }
-
         public static IFeature InsertComFeature<TMacroFeature>(this IFeatureManager featMgr)
             where TMacroFeature : MacroFeatureEx
         {
@@ -69,13 +63,24 @@ namespace SolidWorks.Interop.sldworks
             }
         }
 
-        public static IFeature ReplaceComFeature<TMacroFeature, TParams>(this IFeatureManager featMgr, IFeature feat, TParams parameters)
+        
+        /// <inheritdoc cref="InsertComFeature{TMacroFeature}(IFeatureManager)"/>
+        /// <typeparam name="TParams">Type of parameters to serialize to macro feature</typeparam>
+        /// <param name="parameters">Parameters to serialize to macro feature</param>
+        public static IFeature InsertComFeature<TMacroFeature, TParams>(this IFeatureManager featMgr, TParams parameters)
             where TMacroFeature : MacroFeatureEx<TParams>
             where TParams : class, new()
         {
-            return featMgr.ReplaceComFeatureBase<TMacroFeature>(feat, parameters);
+            return InsertComFeatureWithParameters<TMacroFeature>(featMgr, parameters);
         }
 
+        /// <summary>
+        /// Replaces existing macro feature with a new one preserving the parameters
+        /// </summary>
+        /// <typeparam name="TMacroFeature">Type of macro feature</typeparam>
+        /// <param name="featMgr">Pointer to feature manager</param>
+        /// <param name="feat">Pointer to feature to replace</param>
+        /// <returns>Ne replaced feature</returns>
         public static IFeature ReplaceComFeature<TMacroFeature>(this IFeatureManager featMgr, IFeature feat)
             where TMacroFeature : MacroFeatureEx
         {
@@ -107,6 +112,16 @@ namespace SolidWorks.Interop.sldworks
             return featMgr.ReplaceComFeatureBase<TMacroFeature>(feat, parameters);
         }
 
+        /// <inheritdoc cref="ReplaceComFeature{TMacroFeature}(IFeatureManager, IFeature)"/>
+        /// <typeparam name="TParams">Type of parameters</typeparam>
+        /// <param name="parameters">Parameters to assign to replaced feature</param>
+        public static IFeature ReplaceComFeature<TMacroFeature, TParams>(this IFeatureManager featMgr, IFeature feat, TParams parameters)
+            where TMacroFeature : MacroFeatureEx<TParams>
+            where TParams : class, new()
+        {
+            return featMgr.ReplaceComFeatureBase<TMacroFeature>(feat, parameters);
+        }
+        
         private static IFeature ReplaceComFeatureBase<TMacroFeature>(this IFeatureManager featMgr, IFeature feat, object parameters)
             where TMacroFeature : MacroFeatureEx
         {

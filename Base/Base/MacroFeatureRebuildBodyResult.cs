@@ -13,6 +13,9 @@ using System.Text;
 
 namespace CodeStack.SwEx.MacroFeature.Base
 {
+    /// <summary>
+    /// Represents the result of macro feature where macro feature holds the body or pattern of bodies
+    /// </summary>
     public class MacroFeatureRebuildBodyResult : MacroFeatureRebuildResult
     {
         internal MacroFeatureRebuildBodyResult(params IBody2[] bodies) : this(null, false, bodies)

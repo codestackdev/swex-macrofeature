@@ -12,6 +12,7 @@ using CodeStack.SwEx.MacroFeature.Data;
 using CodeStack.SwEx.MacroFeature.Exceptions;
 using CodeStack.SwEx.MacroFeature.Icons;
 using CodeStack.SwEx.MacroFeature.Mocks;
+using CodeStack.SwEx.MacroFeature.Placeholders;
 using SolidWorks.Interop.sldworks;
 using SolidWorks.Interop.swconst;
 using System;
@@ -152,7 +153,7 @@ namespace CodeStack.SwEx.MacroFeature.Helpers
                         {
                             var dispDim = localDispDims[dimInd];
 
-                            if (!(dispDim is DisplayDimensionEmpty))
+                            if (!(dispDim is DisplayDimensionPlaceholder))
                             {
                                 var dim = dispDim.GetDimension2(0);
                                 var val = (dim.GetSystemValue3(
@@ -419,7 +420,7 @@ namespace CodeStack.SwEx.MacroFeature.Helpers
                     {
                         var dispDim = dispDims[i];
 
-                        if (!(dispDim is DisplayDimensionEmpty))
+                        if (!(dispDim is DisplayDimensionPlaceholder))
                         {
                             SetAndReleaseDimension(dispDim, i, dimValues[i],
                                 featData.CurrentConfiguration.Name);
@@ -458,7 +459,7 @@ namespace CodeStack.SwEx.MacroFeature.Helpers
         {
             var state = MacroFeatureOutdateState_e.UpToDate;
 
-            if (dispDims != null && dispDims.Any(d => d is DisplayDimensionEmpty))
+            if (dispDims != null && dispDims.Any(d => d is DisplayDimensionPlaceholder))
             {
                 state |= MacroFeatureOutdateState_e.Dimensions;
             }

@@ -12,9 +12,12 @@ using System.Text;
 
 namespace CodeStack.SwEx.MacroFeature.Exceptions
 {
+    /// <summary>
+    /// Exception indicates that the macro feature parameters have not been updated via <see cref="Base.IParametersVersionConverter"/>
+    /// </summary>
     public class ParametersMismatchException : Exception
     {
-        public ParametersMismatchException(string reason) 
+        internal ParametersMismatchException(string reason) 
             : base($"{reason}. Please reinsert the feature as changing the dimensions in parameters is not supported")
         {
         }

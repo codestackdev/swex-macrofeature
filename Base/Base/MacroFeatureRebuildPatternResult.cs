@@ -13,6 +13,7 @@ using System.Text;
 
 namespace CodeStack.SwEx.MacroFeature.Base
 {
+    [Obsolete("Deprecated. Use MacroFeatureRebuildBodyResult instead")]
     public class MacroFeatureRebuildPatternResult : MacroFeatureRebuildResult
     {
         internal MacroFeatureRebuildPatternResult(IBody2[] bodiesPattern) : base(bodiesPattern)
