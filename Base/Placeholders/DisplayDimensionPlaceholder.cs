@@ -195,8 +195,10 @@ namespace CodeStack.SwEx.MacroFeature.Placeholders
         public object GetTextFormat() { return false; }
         [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
         public int GetTextFormatItems(int WhichText, out object TokensDefinition, out object TokensEvaluated) { WhichText = -1; TokensDefinition = null; TokensEvaluated = null; return -1; }
+#pragma warning disable CS0108
         [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
         public int GetType() { return -1; }
+#pragma warning restore
         [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
         public int GetUnits() { return -1; }
         [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]

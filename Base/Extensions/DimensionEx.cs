@@ -25,12 +25,12 @@ namespace SolidWorks.Interop.sldworks
         /// <summary>
         /// Sets the direction of the macro feature dimension.
         /// </summary>
-        /// <param name="dim">Pointer to dimension. Usually retrieved from <see cref="CodeStack.SwEx.MacroFeature.MacroFeatureEx{TParams}.DimensionData.Dimension"/></param>
+        /// <param name="dim">Pointer to dimension. Usually retrieved from <see cref="DimensionData.Dimension"/></param>
         /// <param name="originPt">Dimension starting attach point</param>
         /// <param name="dir">Direction of the dimension</param>
         /// <param name="length">Length of the dimension (usually equal to its value)</param>
         /// <param name="extDir">Optional direction of extension line</param>
-        /// <remarks>Call this method within the <see cref="CodeStack.SwEx.MacroFeature.MacroFeatureEx{TParams}.OnSetDimensions(ISldWorks, IModelDoc2, IFeature, CodeStack.SwEx.MacroFeature.MacroFeatureEx{TParams}.DimensionDataCollection, TParams)"/></remarks>
+        /// <remarks>Call this method within the <see cref="CodeStack.SwEx.MacroFeature.MacroFeatureEx{TParams}.OnSetDimensions(ISldWorks, IModelDoc2, IFeature, DimensionDataCollection, TParams)"/></remarks>
         public static void SetDirection(this IDimension dim,
             Point originPt, Vector dir, double length, Vector extDir = null)
         {

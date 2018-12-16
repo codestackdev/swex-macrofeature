@@ -8,6 +8,7 @@
     <owners>CodeStack</owners>
     <licenseUrl>https://github.com/codestack-net-dev/swex-macrofeature/blob/master/LICENSE</licenseUrl>
     <projectUrl>https://www.codestack.net/labs/solidworks/swex/macro-feature</projectUrl>
+	<iconUrl>https://www.codestack.net/labs/solidworks/swex/macro-feature/logo.png</iconUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>Framework for developing custom macro features in SOLIDWORKS</description>
     <releaseNotes></releaseNotes>

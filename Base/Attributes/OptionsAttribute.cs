@@ -33,7 +33,7 @@ namespace CodeStack.SwEx.MacroFeature.Attributes
 
         /// <inheritdoc cref="OptionsAttribute(string, swMacroFeatureOptions_e)"/>
         /// <param name="provider">Default message to display when the COM server is not registered for this feature.
-        /// The provided text is displayed in the What's Wrong dialog of SOLIDWORKS</param>
+        /// The provided text is displayed in the What's Wrong dialog of SOLIDWORKS after the 'Add-in not found. Please contact'</param>
         public OptionsAttribute(string baseName, string provider,
             swMacroFeatureOptions_e flags = swMacroFeatureOptions_e.swMacroFeatureByDefault)
         {

@@ -72,8 +72,10 @@ namespace CodeStack.SwEx.MacroFeature.Placeholders
         public int GetToleranceType() { return -1; }
         [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
         public object GetToleranceValues() { return -1; }
+#pragma warning disable CS0108
         [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
         public int GetType() { return -1; }
+#pragma warning restore
         [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
         public double GetUserValueIn(object Doc) { return -1; }
         [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]

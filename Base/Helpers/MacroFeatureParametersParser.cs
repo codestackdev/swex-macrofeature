@@ -280,7 +280,7 @@ namespace CodeStack.SwEx.MacroFeature.Helpers
                 var selAtt = prp.TryGetAttribute<ParameterSelectionAttribute>();
                 var dimAtt = prp.TryGetAttribute<ParameterDimensionAttribute>();
                 var editBodyAtt = prp.TryGetAttribute<ParameterEditBodyAttribute>();
-
+#pragma warning disable CS0618
                 if (selAtt != null && selAtt.SelectionIndex != -1)
                 {
                     indices = new int[] { selAtt.SelectionIndex };
@@ -297,7 +297,7 @@ namespace CodeStack.SwEx.MacroFeature.Helpers
                 {
                     throw new ParametersMismatchException("Object parameter (selection, edit body or dimension) indices have note been updated");
                 }
-
+#pragma warning restore
                 #endregion
             }
 
