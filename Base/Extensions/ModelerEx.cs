@@ -1,5 +1,5 @@
 ﻿//**********************
-//SwEx - development tools for SOLIDWORKS
+//SwEx.MacroFeature - framework for developing macro features in SOLIDWORKS
 //Copyright(C) 2018 www.codestack.net
 //License: https://github.com/codestack-net-dev/swex-macrofeature/blob/master/LICENSE
 //Product URL: https://www.codestack.net/labs/solidworks/swex/macro-feature
@@ -14,6 +14,12 @@ using System.Text;
 
 namespace SolidWorks.Interop.sldworks
 {
+    /// <summary>
+    /// Extension methods of <see href="http://help.solidworks.com/2016/english/api/sldworksapi/solidworks.interop.sldworks~solidworks.interop.sldworks.imodeler_members.html">IModeler</see> interface
+    /// </summary>
+    /// <remarks>Use these extensions in the context of <see cref="CodeStack.SwEx.MacroFeature.MacroFeatureEx.OnRebuild(ISldWorks, IModelDoc2, IFeature)"/>
+    /// to create a body for macro feature
+    /// </remarks>
     public static class ModelerEx
     {
         private static readonly IMathUtility m_MathUtils;
@@ -23,6 +29,19 @@ namespace SolidWorks.Interop.sldworks
             m_MathUtils = Context.CurrentApp.IGetMathUtility();
         }
 
+        /// <summary>
+        /// Creates the box solid geometry
+        /// </summary>
+        /// <param name="modeler">Pointer to modeler</param>
+        /// <param name="center">Center coordinate of the box in meters</param>
+        /// <param name="dir">Direction of the box</param>
+        /// <param name="width">Width of the box in meters</param>
+        /// <param name="length">Length of the box in meters</param>
+        /// <param name="height">Height of the box in meters. This is a dimension parallel to <paramref name="dir"/></param>
+        /// <returns>Pointer to a temp body</returns>
+        /// <remarks>Use this method instead of built-in <see href="http://help.solidworks.com/2016/english/api/sldworksapi/SolidWorks.Interop.sldworks~SolidWorks.Interop.sldworks.IModeler~CreateBodyFromBox3.html">IModeler::CreateBodyFromBox</see>
+        /// If you need to preserve entity ids as the body generated using the built-in method won't allow to set user id,
+        /// which means any reference geometry generated in relation to box entities will become dangling upon rebuild</remarks>
         public static IBody2 CreateBox(this IModeler modeler, Point center, Vector dir,
             double width, double length, double height)
         {
@@ -67,7 +86,19 @@ namespace SolidWorks.Interop.sldworks
 
             return Extrude(modeler, surf, curves, zVec, height);
         }
-        
+
+        /// <summary>
+        /// Creates the cylindrical body
+        /// </summary>
+        /// <param name="modeler">Pointer to modeler</param>
+        /// <param name="center">Center coordinate of cylinder in meters</param>
+        /// <param name="axis">Cylinder axis</param>
+        /// <param name="radius">Cylinder radius in meters</param>
+        /// <param name="height">Cylinder height</param>
+        /// <returns>Cylindrical temp body</returns>
+        /// <remarks>Use this method instead of built-in <see href="http://help.solidworks.com/2016/english/api/sldworksapi/SolidWorks.Interop.sldworks~SolidWorks.Interop.sldworks.IModeler~CreateBodyFromCyl.html">IModeler::CreateBodyFromCyl</see>
+        /// If you need to preserve entity ids as the body generated using the built-in method won't allow to set user id,
+        /// which means any reference geometry generated in relation to cylinder entities will become dangling upon rebuild</remarks>
         public static IBody2 CreateCylinder(this IModeler modeler, Point center, Vector axis, double radius, double height)
         {
             IMathVector refVec;

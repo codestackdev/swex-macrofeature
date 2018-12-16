@@ -1,19 +1,18 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<topic id="v0-1-0" revisionNumber="1">
+<topic id="v0-3-0" revisionNumber="1">
 	<developerConceptualDocument xmlns="http://ddue.schemas.microsoft.com/authoring/2003/5" xmlns:xlink="http://www.w3.org/1999/xlink">
 		<introduction>
-			<para>Version 0.1.0 was released on 19 Nov 2018.
+			<para>Version 0.3.0 was released on 16 Dec 2018.
 			</para>
 		</introduction>
 
 		<section>
-			<title>Initial alpha release</title>
+			<title>First stable release</title>
 			<content>
 
 				<list class="bullet">
 					<listItem>
-						<para>Support for macro feature via data model</para>
-            <para>Support fo dimensions, edit bodies, selections and parameters</para>
+						<para>Support for lists in selections and edit bodies</para>
 					</listItem>
 
 				</list>

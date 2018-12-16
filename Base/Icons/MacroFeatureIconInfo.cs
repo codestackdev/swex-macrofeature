@@ -1,5 +1,5 @@
 ﻿//**********************
-//SwEx - development tools for SOLIDWORKS
+//SwEx.MacroFeature - framework for developing macro features in SOLIDWORKS
 //Copyright(C) 2018 www.codestack.net
 //License: https://github.com/codestack-net-dev/swex-macrofeature/blob/master/LICENSE
 //Product URL: https://www.codestack.net/labs/solidworks/swex/macro-feature
@@ -19,6 +19,7 @@ namespace CodeStack.SwEx.MacroFeature.Icons
 {
     internal static class MacroFeatureIconInfo
     {
+        internal const string DEFAULT_ICON_FOLDER = "CodeStack\\SwEx.MacroFeature\\{0}\\Icons";
         internal const string RegularName = "Regular";
         internal const string SuppressedName = "Suppressed";
         internal const string HighlightedName = "Highlighted";
@@ -36,7 +37,7 @@ namespace CodeStack.SwEx.MacroFeature.Icons
 
             if (string.IsNullOrEmpty(iconFolderName))
             {
-                iconFolderName = $"{macroFeatType.FullName}\\MacroFeatureIcons";
+                iconFolderName = string.Format(DEFAULT_ICON_FOLDER, macroFeatType.FullName);
             }
 
             return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData),

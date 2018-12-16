@@ -14,15 +14,14 @@ namespace CodeStack.SwEx.MacroFeature.Example
 {
     public class DimensionMacroFeatureParams
     {
-        [ParameterDimension(swDimensionType_e.swLinearDimension, 0)]
+        [ParameterDimension(swDimensionType_e.swLinearDimension)]
         public double RefDimension { get; set; } = 0.01;
 
-        [ParameterDimension(swDimensionType_e.swLinearDimension, 1)]
+        [ParameterDimension(swDimensionType_e.swLinearDimension)]
         public double RefCalcDimension { get; set; }
     }
 
     [ComVisible(true)]
-    [Icon(typeof(Resources), nameof(Resources.codestack), "CodeStack\\MacroFeatureExample\\Icons")]
     public class DimensionMacroFeature : MacroFeatureEx<DimensionMacroFeatureParams>
     {
         protected override MacroFeatureRebuildResult OnRebuild(ISldWorks app, IModelDoc2 model,

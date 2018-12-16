@@ -1,5 +1,5 @@
 ﻿//**********************
-//SwEx - development tools for SOLIDWORKS
+//SwEx.MacroFeature - framework for developing macro features in SOLIDWORKS
 //Copyright(C) 2018 www.codestack.net
 //License: https://github.com/codestack-net-dev/swex-macrofeature/blob/master/LICENSE
 //Product URL: https://www.codestack.net/labs/solidworks/swex/macro-feature
@@ -21,7 +21,15 @@ namespace CodeStack.SwEx.MacroFeature.Icons
         }
 
         internal Image Icon { get; set; }
-        
+
+        public override MacroFeatureIcon Clone(string baseName)
+        {
+            return new MasterIcon(baseName)
+            {
+                Icon = Icon
+            };
+        }
+
         public override IEnumerable<IconSizeInfo> GetHighResolutionIconSizes()
         {
             yield return new IconSizeInfo(Icon, MacroFeatureIconInfo.SizeHighResSmall, BaseName);

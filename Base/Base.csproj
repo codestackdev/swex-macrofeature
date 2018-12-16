@@ -22,12 +22,16 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <DebugType>pdbonly</DebugType>
+    <DebugType>none</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>bin\Release\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <DocumentationFile>bin\Release\CodeStack.SwEx.MacroFeature.xml</DocumentationFile>
+    <Prefer32Bit>false</Prefer32Bit>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <NoWarn>CS1591,CS1580,CS1573,CS1712</NoWarn>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="CodeStack.SwEx.Common, Version=0.9.0.0, Culture=neutral, PublicKeyToken=a46023996d4724e7, processorArchitecture=MSIL">
@@ -74,6 +78,10 @@
     <Compile Include="Base\MacroFeatureRebuildPatternResult.cs" />
     <Compile Include="Base\MacroFeatureRebuildResult.cs" />
     <Compile Include="Base\MacroFeatureRebuldStatusResult.cs" />
+    <Compile Include="Core\MacroFeatureExOfTParams.cs" />
+    <Compile Include="Core\MacroFeatureExOfTParamsTHandler.cs" />
+    <Compile Include="Data\DimensionData.cs" />
+    <Compile Include="Data\DimensionDataCollection.cs" />
     <Compile Include="Exceptions\FutureVersionParametersException.cs" />
     <Compile Include="Exceptions\ParametersMismatchException.cs" />
     <Compile Include="Extensions\ModelerEx.cs" />
@@ -90,17 +98,30 @@
     <Compile Include="Icons\MacroFeatureIcon.cs" />
     <Compile Include="Icons\MacroFeatureIconInfo.cs" />
     <Compile Include="Icons\MasterIcon.cs" />
-    <Compile Include="MacroFeatureEx.cs" />
-    <Compile Include="Mocks\DimensionEmpty.cs" />
-    <Compile Include="Mocks\DisplayDimensionEmpty.cs" />
+    <Compile Include="Core\MacroFeatureEx.cs" />
+    <Compile Include="Placeholders\DimensionPlaceholder.cs" />
+    <Compile Include="Placeholders\DisplayDimensionPlaceholder.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Data\Point.cs" />
     <Compile Include="Data\Vector.cs" />
+    <Compile Include="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <EmbeddedResource Include="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\default-icon.png" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
