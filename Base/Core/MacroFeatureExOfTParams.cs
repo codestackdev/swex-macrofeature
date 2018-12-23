@@ -41,7 +41,8 @@ namespace CodeStack.SwEx.MacroFeature
             var featDef = feature.GetDefinition() as IMacroFeatureData;
 
             IDisplayDimension[] dispDims;
-            var parameters = GetParameters(feature, featDef, model, out dispDims);
+            IBody2[] editBodies;
+            var parameters = GetParameters(feature, featDef, model, out dispDims, out editBodies);
 
             var res = OnRebuild(app, model, feature, parameters);
 
@@ -90,15 +91,8 @@ namespace CodeStack.SwEx.MacroFeature
         protected TParams GetParameters(IFeature feat, IMacroFeatureData featData, IModelDoc2 model)
         {
             IDisplayDimension[] dispDims;
-            var parameters = GetParameters(feat, featData, model, out dispDims);
-
-            if (dispDims != null)
-            {
-                for (int i = 0; i < dispDims.Length; i++)
-                {
-
-                }
-            }
+            IBody2[] editBodies;
+            var parameters = GetParameters(feat, featData, model, out dispDims, out editBodies);
 
             return parameters;
         }
@@ -124,15 +118,22 @@ namespace CodeStack.SwEx.MacroFeature
             m_ParamsParser.SetParameters(model, feat, featData, parameters, out state);
         }
 
-        private TParams GetParameters(IFeature feat, IMacroFeatureData featData, IModelDoc2 model, out IDisplayDimension[] dispDims)
+        [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
+        protected TParams GetParameters(IFeature feat, IMacroFeatureData featData, IModelDoc2 model,
+            out IDisplayDimension[] dispDims, out IBody2[] editBodies)
         {
             MacroFeatureOutdateState_e state;
-            return GetParameters(feat, featData, model, out dispDims, out state);
+            return m_ParamsParser.GetParameters<TParams>(feat, featData, model, out dispDims, out editBodies, out state);
         }
 
-        private TParams GetParameters(IFeature feat, IMacroFeatureData featData, IModelDoc2 model, out IDisplayDimension[] dispDims, out MacroFeatureOutdateState_e state)
+        [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
+        protected void ParseParameters(TParams parameters,
+            out string[] paramNames, out int[] paramTypes,
+            out string[] paramValues, out object[] selection,
+            out int[] dimTypes, out double[] dimValues, out IBody2[] editBodies)
         {
-            return m_ParamsParser.GetParameters<TParams>(feat, featData, model, out dispDims, out state);
+            m_ParamsParser.Parse(parameters, out paramNames, out paramTypes,
+                out paramValues, out selection, out dimTypes, out dimValues, out editBodies);
         }
 
         private void UpdateDimensions(ISldWorks app, IModelDoc2 model, IFeature feature,

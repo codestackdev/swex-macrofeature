@@ -43,14 +43,14 @@ namespace CodeStack.SwEx.MacroFeature.Helpers
         }
 
         internal TParams GetParameters<TParams>(IFeature feat, IMacroFeatureData featData, IModelDoc2 model, 
-            out IDisplayDimension[] dispDims, out MacroFeatureOutdateState_e state)
+            out IDisplayDimension[] dispDims, out IBody2[] editBodies, out MacroFeatureOutdateState_e state)
             where TParams : class, new()
         {
-            return GetParameters(feat, featData, model, typeof(TParams), out dispDims, out state) as TParams;
+            return GetParameters(feat, featData, model, typeof(TParams), out dispDims, out editBodies, out state) as TParams;
         }
 
         internal object GetParameters(IFeature feat, IMacroFeatureData featData, IModelDoc2 model, Type paramsType,
-            out IDisplayDimension[] dispDims, out MacroFeatureOutdateState_e state)
+            out IDisplayDimension[] dispDims, out IBody2[] editBodies, out MacroFeatureOutdateState_e state)
         {
             object retParamNames = null;
             object retParamValues = null;
@@ -87,11 +87,11 @@ namespace CodeStack.SwEx.MacroFeature.Helpers
 
                 object[] editBodiesObj = featData.EditBodies as object[];
 
-                IBody2[] editBodies = null;
+                IBody2[] localEditBodies = null;
 
                 if (editBodiesObj != null)
                 {
-                    editBodies = editBodiesObj.Cast<IBody2>().ToArray();
+                    localEditBodies = editBodiesObj.Cast<IBody2>().ToArray();
                 }
 
                 var paramNames = retParamNames as string[];
@@ -125,7 +125,7 @@ namespace CodeStack.SwEx.MacroFeature.Helpers
                 ConvertParameters(paramsType, paramsVersion, conv =>
                 {
                     parameters = conv.ConvertParameters(model, feat, parameters);
-                    editBodies = conv.ConvertEditBodies(model, feat, editBodies);
+                    localEditBodies = conv.ConvertEditBodies(model, feat, localEditBodies);
                     selObjects = conv.ConvertSelections(model, feat, selObjects);
                     localDispDims = conv.ConvertDisplayDimensions(model, feat, localDispDims);
                 });
@@ -170,7 +170,7 @@ namespace CodeStack.SwEx.MacroFeature.Helpers
                     },
                     (prp) =>
                     {
-                        AssignObjectsToProperty(resParams, editBodies, prp, parameters);
+                        AssignObjectsToProperty(resParams, localEditBodies, prp, parameters);
                     },
                     prp =>
                     {
@@ -180,6 +180,7 @@ namespace CodeStack.SwEx.MacroFeature.Helpers
                     });
 
                 dispDims = localDispDims;
+                editBodies = localEditBodies;
                 state = GetState(featData, localDispDims);
                 return resParams;
             }

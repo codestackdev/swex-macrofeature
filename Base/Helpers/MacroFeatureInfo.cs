@@ -49,11 +49,22 @@ namespace CodeStack.SwEx.MacroFeature.Helpers
         internal static string GetProgId<TMacroFeature>()
             where TMacroFeature : MacroFeatureEx
         {
+            return GetProgId(typeof(TMacroFeature));
+        }
+
+        internal static string GetProgId(Type macroFeatType)
+        {
+            if (!typeof(MacroFeatureEx).IsAssignableFrom(macroFeatType))
+            {
+                throw new InvalidCastException(
+                    $"{macroFeatType.FullName} must inherit {typeof(MacroFeatureEx).FullName}");
+            }
+
             string progId = "";
 
-            if (!typeof(TMacroFeature).TryGetAttribute<ProgIdAttribute>(a => progId = a.Value))
+            if (!macroFeatType.TryGetAttribute<ProgIdAttribute>(a => progId = a.Value))
             {
-                progId = typeof(TMacroFeature).FullName;
+                progId = macroFeatType.FullName;
             }
 
             return progId;

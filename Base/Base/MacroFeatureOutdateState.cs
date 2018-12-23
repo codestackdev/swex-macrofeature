@@ -11,7 +11,7 @@ using SolidWorks.Interop.sldworks;
 namespace CodeStack.SwEx.MacroFeature.Base
 {
     /// <summary>
-    /// State of macro feature parameters returned from <see cref="MacroFeatureEx{TParams}.GetParameters(IFeature, IMacroFeatureData, IModelDoc2, out IDisplayDimension[], out MacroFeatureOutdateState_e)"/>
+    /// State of macro feature parameters returned from <see cref="MacroFeatureEx{TParams}.GetParameters(IFeature, IMacroFeatureData, IModelDoc2, out MacroFeatureOutdateState_e)"/>
     /// or <see cref="MacroFeatureEx{TParams}.SetParameters(IModelDoc2, IFeature, IMacroFeatureData, TParams, out MacroFeatureOutdateState_e)"/> in cases
     /// where new version of macro feature's parameters could not be fully upgraded via <see cref="IParametersVersionConverter"/>
     /// </summary>
