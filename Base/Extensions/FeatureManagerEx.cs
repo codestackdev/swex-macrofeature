@@ -15,6 +15,7 @@ using CodeStack.SwEx.MacroFeature.Icons;
 using SolidWorks.Interop.swconst;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -54,12 +55,12 @@ namespace SolidWorks.Interop.sldworks
 
                 var parameters = Activator.CreateInstance(paramsType);
 
-                return InsertComFeatureWithParameters<TMacroFeature>(featMgr, parameters);
+                return InsertComFeatureWithParameters(featMgr, typeof(TMacroFeature), parameters);
             }
             else
             {
-                return InsertComFeatureBase<TMacroFeature>(
-                    featMgr, null, null, null, null, null, null, null);
+                return InsertComFeatureBase(
+                    featMgr, typeof(TMacroFeature), null, null, null, null, null, null, null);
             }
         }
 
@@ -71,7 +72,13 @@ namespace SolidWorks.Interop.sldworks
             where TMacroFeature : MacroFeatureEx<TParams>
             where TParams : class, new()
         {
-            return InsertComFeatureWithParameters<TMacroFeature>(featMgr, parameters);
+            return InsertComFeatureWithParameters(featMgr, typeof(TMacroFeature), parameters);
+        }
+
+        [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
+        public static IFeature InsertComFeature(this IFeatureManager featMgr, Type macroFeatType, object parameters)
+        {
+            return InsertComFeatureWithParameters(featMgr, macroFeatType, parameters);
         }
 
         /// <summary>
@@ -104,8 +111,9 @@ namespace SolidWorks.Interop.sldworks
             {
                 var paramsType = typeof(TMacroFeature).GetArgumentsOfGenericType(typeof(MacroFeatureEx<>)).First();
                 IDisplayDimension[] dispDims;
+                IBody2[] editBodies;
                 MacroFeatureOutdateState_e state;
-                parameters = m_ParamsParser.GetParameters(feat, featData, model, paramsType, out dispDims, out state);
+                parameters = m_ParamsParser.GetParameters(feat, featData, model, paramsType, out dispDims, out editBodies, out state);
                 MacroFeatureParametersParser.ReleaseDisplayDimensions(dispDims);
             }
 
@@ -153,7 +161,7 @@ namespace SolidWorks.Interop.sldworks
 
                 if (parameters != null)
                 {
-                    newFeat = InsertComFeatureWithParameters<TMacroFeature>(featMgr, parameters);
+                    newFeat = InsertComFeatureWithParameters(featMgr, typeof(TMacroFeature), parameters);
                 }
                 else
                 {
@@ -173,9 +181,8 @@ namespace SolidWorks.Interop.sldworks
             }
         }
 
-        private static IFeature InsertComFeatureWithParameters<TMacroFeature>(
-            IFeatureManager featMgr, object parameters)
-            where TMacroFeature : MacroFeatureEx
+        private static IFeature InsertComFeatureWithParameters(
+            IFeatureManager featMgr, Type macroFeatType, object parameters)
         {
             string[] paramNames;
             int[] paramTypes;
@@ -189,34 +196,38 @@ namespace SolidWorks.Interop.sldworks
                 out paramNames, out paramTypes, out paramValues, out selection,
                 out dimTypes, out dimValues, out editBodies);
             
-            return InsertComFeatureBase<TMacroFeature>(featMgr, paramNames,
+            return InsertComFeatureBase(featMgr, macroFeatType, paramNames,
                 paramTypes, paramValues, dimTypes, dimValues, selection, editBodies);
         }
 
-        private static IFeature InsertComFeatureBase<TMacroFeature>(this IFeatureManager featMgr,
+        private static IFeature InsertComFeatureBase(IFeatureManager featMgr, Type macroFeatType,
             string[] paramNames, int[] paramTypes, string[] paramValues,
             int[] dimTypes, double[] dimValues, object[] selection, object[] editBodies)
-            where TMacroFeature : MacroFeatureEx
         {
+            if (!typeof(MacroFeatureEx).IsAssignableFrom(macroFeatType))
+            {
+                throw new InvalidCastException($"{macroFeatType.FullName} must inherit {typeof(MacroFeatureEx).FullName}");
+            }
+
             var options = swMacroFeatureOptions_e.swMacroFeatureByDefault;
             var provider = "";
 
-            typeof(TMacroFeature).TryGetAttribute<OptionsAttribute>(a =>
+            macroFeatType.TryGetAttribute<OptionsAttribute>(a =>
             {
                 options = a.Flags;
                 provider = a.Provider;
             });
 
-            var baseName = MacroFeatureInfo.GetBaseName<TMacroFeature>();
+            var baseName = MacroFeatureInfo.GetBaseName(macroFeatType);
 
-            var progId = MacroFeatureInfo.GetProgId<TMacroFeature>();
+            var progId = MacroFeatureInfo.GetProgId(macroFeatType);
 
             if (string.IsNullOrEmpty(progId))
             {
                 throw new NullReferenceException("Prog id for macro feature cannot be extracted");
             }
 
-            var icons = MacroFeatureIconInfo.GetIcons(typeof(TMacroFeature), m_App.SupportsHighResIcons());
+            var icons = MacroFeatureIconInfo.GetIcons(macroFeatType, m_App.SupportsHighResIcons());
 
             using (var selSet = new SelectionGroup(featMgr.Document.ISelectionManager))
             {
