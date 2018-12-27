@@ -33,7 +33,7 @@ namespace CodeStack.SwEx.MacroFeature.Icons
         {
             var iconFolderName = "";
 
-            macroFeatType.TryGetAttribute<IconAttribute>(a => iconFolderName = a.IconFolderName);
+            macroFeatType.TryGetAttribute<FeatureIconAttribute>(a => iconFolderName = a.IconFolderName);
 
             if (string.IsNullOrEmpty(iconFolderName))
             {

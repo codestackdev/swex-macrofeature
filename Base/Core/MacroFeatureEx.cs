@@ -5,6 +5,8 @@
 //Product URL: https://www.codestack.net/labs/solidworks/swex/macro-feature
 //**********************
 
+using CodeStack.SwEx.Common.Attributes;
+using CodeStack.SwEx.Common.Base;
 using CodeStack.SwEx.Common.Icons;
 using CodeStack.SwEx.Common.Reflection;
 using CodeStack.SwEx.MacroFeature.Attributes;
@@ -19,10 +21,12 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
+using CodeStack.SwEx.Common.Diagnostics;
 
 namespace CodeStack.SwEx.MacroFeature
 {
@@ -30,19 +34,32 @@ namespace CodeStack.SwEx.MacroFeature
     /// Represents basic macro feature class
     /// </summary>
     /// <remarks>Mark the class as COM visible with <see cref="ComVisibleAttribute"/></remarks>
-    public abstract class MacroFeatureEx : ISwComFeature
+    [ModuleInfo("SwEx.MacroFeature")]
+    public abstract class MacroFeatureEx : ISwComFeature, IModule
     {
         #region Initiation
 
-        private string m_Provider;
+        private readonly string m_Provider;
+        private readonly ILogger m_Logger;
+
+        public ILogger Logger
+        {
+            get
+            {
+                return m_Logger;
+            }
+        }
 
         public MacroFeatureEx()
         {
+            string provider = "";
             this.GetType().TryGetAttribute<OptionsAttribute>(a =>
             {
-                m_Provider = a.Provider;
+                provider = a.Provider;
             });
 
+            m_Provider = provider;
+            m_Logger = LoggerFactory.Create(this);
             TryCreateIcons();
         }
         
@@ -55,7 +72,7 @@ namespace CodeStack.SwEx.MacroFeature
             MacroFeatureIcon highIcon = null;
             MacroFeatureIcon suppIcon = null;
 
-            this.GetType().TryGetAttribute<IconAttribute>(a =>
+            this.GetType().TryGetAttribute<FeatureIconAttribute>(a =>
             {
                 regIcon = a.Regular;
                 highIcon = a.Highlighted;
@@ -64,9 +81,21 @@ namespace CodeStack.SwEx.MacroFeature
 
             if (regIcon == null)
             {
+                Image icon = null;
+
+                this.GetType().TryGetAttribute<Common.Attributes.IconAttribute>(a =>
+                {
+                    icon = a.Icon;
+                });
+
+                if (icon == null)
+                {
+                    icon = Resources.default_icon;
+                }
+
                 regIcon = new MasterIcon(MacroFeatureIconInfo.RegularName)
                 {
-                    Icon = Resources.default_icon
+                    Icon = icon
                 };
             }
 
@@ -90,8 +119,9 @@ namespace CodeStack.SwEx.MacroFeature
                 iconsConverter.ConvertIcon(suppIcon, false);
                 iconsConverter.ConvertIcon(highIcon, false);
             }
-            catch
+            catch(Exception ex)
             {
+                Logger.Log(ex);
             }
         }
 
@@ -134,12 +164,16 @@ namespace CodeStack.SwEx.MacroFeature
         [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
         public object Edit(object app, object modelDoc, object feature)
         {
+            LogOperation("Editing feature", app as ISldWorks, modelDoc as IModelDoc2, feature as IFeature);
+
             return OnEditDefinition(app as ISldWorks, modelDoc as IModelDoc2, feature as IFeature);
         }
 
         [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
         public object Regenerate(object app, object modelDoc, object feature)
         {
+            LogOperation("Regenerating feature", app as ISldWorks, modelDoc as IModelDoc2, feature as IFeature);
+
             SetProvider(feature);
 
             var res = OnRebuild(app as ISldWorks, modelDoc as IModelDoc2, feature as IFeature);
@@ -152,6 +186,12 @@ namespace CodeStack.SwEx.MacroFeature
             {
                 return null;
             }
+        }
+
+        [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
+        public object Security(object app, object modelDoc, object feature)
+        {
+            return OnUpdateState(app as ISldWorks, modelDoc as IModelDoc2, feature as IFeature);
         }
 
         private void SetProvider(object feature)
@@ -167,10 +207,9 @@ namespace CodeStack.SwEx.MacroFeature
             }
         }
 
-        [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
-        public object Security(object app, object modelDoc, object feature)
+        private void LogOperation(string operName, ISldWorks app, IModelDoc2 modelDoc, IFeature feature)
         {
-            return OnUpdateState(app as ISldWorks, modelDoc as IModelDoc2, feature as IFeature);
+            Logger.Log($"{operName}: {feature?.Name} in {modelDoc?.GetTitle()} of SOLIDWORKS session: {app?.GetProcessID()}");
         }
 
         #endregion

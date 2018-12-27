@@ -24,7 +24,7 @@ namespace CodeStack.SwEx.MacroFeature.Example
     }
 
     [ComVisible(true)]
-    [Icon(typeof(Resources), nameof(Resources.codestack), "CodeStack\\MacroFeatureExample\\Icons")]
+    [FeatureIcon(typeof(Resources), nameof(Resources.codestack), "CodeStack\\MacroFeatureExample\\Icons")]
     public class BoundingCylinderMacroFeature : MacroFeatureEx<BoundingCylinderMacroFeatureParams>
     {
         protected override bool OnEditDefinition(ISldWorks app, IModelDoc2 model, IFeature feature)

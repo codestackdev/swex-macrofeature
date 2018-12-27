@@ -12,11 +12,26 @@ using System.Drawing;
 
 namespace CodeStack.SwEx.MacroFeature.Attributes
 {
+    [Obsolete("Deprecated. Use FeatureIconAttribute or Common.Attributes.IconAttribute instead")]
+    public class IconAttribute : FeatureIconAttribute
+    {
+        public IconAttribute(Type resType, string resName, string iconFolderName = "")
+            : base(resType, resName, iconFolderName)
+        {
+        }
+
+        public IconAttribute(Type resType, string smallResName, string mediumResName,
+            string largeResName, string iconFolderName = "")
+            : base(resType, smallResName, mediumResName, largeResName, iconFolderName)
+        {
+        }
+    }
+
     /// <summary>
     /// Specifies the icon for macro feature to be displayed in the Feature Manager Tree
     /// </summary>
     [AttributeUsage(AttributeTargets.Class)]
-    public class IconAttribute : Attribute
+    public class FeatureIconAttribute : Attribute
     {
         internal MacroFeatureIcon Regular { get; private set; }
         internal MacroFeatureIcon Suppressed { get; private set; }
@@ -32,7 +47,7 @@ namespace CodeStack.SwEx.MacroFeature.Attributes
         /// <param name="iconFolderName">Folder name to store the icons.
         /// This folder will be created in the Program Data.
         /// If empty value is specified icon will be created at the default location</param>
-        public IconAttribute(Type resType, string resName, string iconFolderName = "")
+        public FeatureIconAttribute(Type resType, string resName, string iconFolderName = "")
         {
             Regular = CreateIcon(resType, resName, MacroFeatureIconInfo.RegularName);
             Suppressed = CreateIcon(resType, resName, MacroFeatureIconInfo.SuppressedName);
@@ -45,7 +60,7 @@ namespace CodeStack.SwEx.MacroFeature.Attributes
         /// <param name="smallResName">Name of the resource representing the small size icon</param>
         /// <param name="mediumResName">Name of the resource representing the medium size icon</param>
         /// <param name="largeResName">Name of the resource representing the large size icon</param>
-        public IconAttribute(Type resType, string smallResName, string mediumResName,
+        public FeatureIconAttribute(Type resType, string smallResName, string mediumResName,
             string largeResName, string iconFolderName = "")
         {
             Regular = CreateIcon(resType, smallResName, mediumResName, largeResName, MacroFeatureIconInfo.RegularName);

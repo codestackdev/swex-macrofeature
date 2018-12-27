@@ -20,6 +20,7 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>none</DebugType>
@@ -34,7 +35,7 @@
     <NoWarn>CS1591,CS1580,CS1573,CS1712</NoWarn>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="CodeStack.SwEx.Common, Version=0.9.0.0, Culture=neutral, PublicKeyToken=a46023996d4724e7, processorArchitecture=MSIL">
+    <Reference Include="CodeStack.SwEx.Common, Version=0.9.5.0, Culture=neutral, PublicKeyToken=null, processorArchitecture=MSIL">
       <HintPath>..\packages\CodeStack.SwEx.Common.0.9.0\lib\net40\CodeStack.SwEx.Common.dll</HintPath>
     </Reference>
     <Reference Include="SolidWorks.Interop.sldworks, Version=26.2.0.63, Culture=neutral, PublicKeyToken=7c4797c3e4eeac03, processorArchitecture=MSIL">
@@ -65,7 +66,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Attributes\IconAttribute.cs" />
+    <Compile Include="Attributes\FeatureIconAttribute.cs" />
     <Compile Include="Attributes\OptionsAttribute.cs" />
     <Compile Include="Attributes\ParameterDimensionAttribute.cs" />
     <Compile Include="Attributes\ParameterEditBodyAttribute.cs" />

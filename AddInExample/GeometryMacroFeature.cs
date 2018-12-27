@@ -13,21 +13,11 @@ using System.Runtime.Remoting.Contexts;
 namespace CodeStack.SwEx.MacroFeature.Example
 {
     [ComVisible(true)]
-    [Icon(typeof(Resources), nameof(Resources.codestack), "CodeStack\\MacroFeatureExample\\Icons")]
+    [Common.Attributes.Icon(typeof(Resources), nameof(Resources.codestack))]
     public class GeometryMacroFeature : MacroFeatureEx
     {
         protected override bool OnEditDefinition(ISldWorks app, IModelDoc2 model, IFeature feature)
         {
-            model.Insert3DSketch2(true);
-            model.SketchManager.AddToDB = true;
-            model.SketchManager.CreatePoint(0.1, 0.2, 0.3);
-            model.SketchManager.CreatePoint(-0.0605662432702594, 0.0894337567297407, -0.0288675134594813);
-            model.SketchManager.CreatePoint(-0.0183012701892219, -0.0683012701892219, 0.0866025403784439);
-            model.SketchManager.CreatePoint(0.0605662432702594, -0.0894337567297407, 0.0288675134594813);
-            model.SketchManager.CreatePoint(0.0183012701892219, 0.0683012701892219, -0.0866025403784439);
-            model.SketchManager.AddToDB = false;
-            model.Insert3DSketch2(true);
-
             return true;
         }
 

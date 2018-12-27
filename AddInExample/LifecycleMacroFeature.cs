@@ -41,7 +41,7 @@ namespace CodeStack.SwEx.MacroFeature.Example
     }
 
     [ComVisible(true)]
-    [Icon(typeof(Resources), nameof(Resources.codestack), "CodeStack\\MacroFeatureExample\\Icons")]
+    [FeatureIcon(typeof(Resources), nameof(Resources.codestack), "CodeStack\\MacroFeatureExample\\Icons")]
     public class LifecycleMacroFeature : MacroFeatureEx<LifecycleMacroFeatureParams, LifecycleMacroFeatureHandler>
     {
         protected override MacroFeatureRebuildResult OnRebuild(LifecycleMacroFeatureHandler handler,

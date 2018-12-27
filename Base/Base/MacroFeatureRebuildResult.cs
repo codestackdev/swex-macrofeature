@@ -71,7 +71,7 @@ namespace CodeStack.SwEx.MacroFeature.Base
 
         private readonly object m_Result;
 
-        internal MacroFeatureRebuildResult(object result)
+        protected MacroFeatureRebuildResult(object result)
         {
             m_Result = result;
         }

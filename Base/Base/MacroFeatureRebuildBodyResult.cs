@@ -18,7 +18,7 @@ namespace CodeStack.SwEx.MacroFeature.Base
     /// </summary>
     public class MacroFeatureRebuildBodyResult : MacroFeatureRebuildResult
     {
-        internal MacroFeatureRebuildBodyResult(params IBody2[] bodies) : this(null, false, bodies)
+        internal protected MacroFeatureRebuildBodyResult(params IBody2[] bodies) : this(null, false, bodies)
         {
         }
 

@@ -38,15 +38,23 @@ namespace CodeStack.SwEx.MacroFeature
         [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
         protected sealed override MacroFeatureRebuildResult OnRebuild(ISldWorks app, IModelDoc2 model, IFeature feature)
         {
+            Logger.Log("Rebuilding. Getting parameters");
+
             var featDef = feature.GetDefinition() as IMacroFeatureData;
 
             IDisplayDimension[] dispDims;
             IBody2[] editBodies;
             var parameters = GetParameters(feature, featDef, model, out dispDims, out editBodies);
 
-            var res = OnRebuild(app, model, feature, parameters);
+            Logger.Log("Rebuilding. Generating bodies");
 
-            UpdateDimensions(app, model, feature, dispDims, parameters);
+            var rebuildRes = OnRebuild(app, model, feature, parameters);
+
+            Logger.Log("Rebuilding. Updating dimensions");
+
+            UpdateDimensions(app, model, feature, rebuildRes, dispDims, parameters);
+
+            Logger.Log("Rebuilding. Releasing dimensions");
 
             if (dispDims != null)
             {
@@ -56,7 +64,7 @@ namespace CodeStack.SwEx.MacroFeature
                 }
             }
 
-            return res;
+            return rebuildRes;
         }
 
         /// <inheritdoc cref="MacroFeatureEx.OnRebuild(ISldWorks, IModelDoc2, IFeature)"/>
@@ -74,8 +82,18 @@ namespace CodeStack.SwEx.MacroFeature
         /// <param name="feature">Pointer to macro feature</param>
         /// <param name="dims">Pointer to dimensions of macro feature</param>
         /// <param name="parameters">Current instance of parameters (including the values of dimensions)</param>
-        /// <remarks>Use the <see cref="DimensionEx.SetDirection(IDimension, Data.Point, Data.Vector, double, Data.Vector)"/>
+        /// <remarks>Use the <see cref="DimensionDataExtension.SetDirection(DimensionData, Point, Vector)"/>
         /// helper method to set the dimension orientation and position based on its values</remarks>
+        protected virtual void OnSetDimensions(ISldWorks app, IModelDoc2 model, IFeature feature,
+            MacroFeatureRebuildResult rebuildResult, DimensionDataCollection dims, TParams parameters)
+        {
+#pragma warning disable CS0618
+            OnSetDimensions(app, model, feature, dims, parameters);
+#pragma warning restore CS0618
+        }
+
+        [Obsolete("Deprecated. Use another overload of this method")]
+        [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
         protected virtual void OnSetDimensions(ISldWorks app, IModelDoc2 model, IFeature feature,
             DimensionDataCollection dims, TParams parameters)
         {
@@ -137,13 +155,13 @@ namespace CodeStack.SwEx.MacroFeature
         }
 
         private void UpdateDimensions(ISldWorks app, IModelDoc2 model, IFeature feature,
-            IDisplayDimension[] dispDims, TParams parameters)
+            MacroFeatureRebuildResult rebuildRes, IDisplayDimension[] dispDims, TParams parameters)
         {
             using (var dimsColl = new DimensionDataCollection(dispDims))
             {
                 if (dimsColl.Any())
                 {
-                    OnSetDimensions(app, model, feature, dimsColl, parameters);
+                    OnSetDimensions(app, model, feature, rebuildRes, dimsColl, parameters);
                 }
             }
         }
