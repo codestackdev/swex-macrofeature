@@ -81,6 +81,7 @@
     <Compile Include="Base\MacroFeatureRebuldStatusResult.cs" />
     <Compile Include="Core\MacroFeatureExOfTParams.cs" />
     <Compile Include="Core\MacroFeatureExOfTParamsTHandler.cs" />
+    <Compile Include="Core\ObsoleteMacroFeatureEx.cs" />
     <Compile Include="Data\DimensionData.cs" />
     <Compile Include="Data\DimensionDataCollection.cs" />
     <Compile Include="Exceptions\FutureVersionParametersException.cs" />

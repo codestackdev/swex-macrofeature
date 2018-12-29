@@ -248,7 +248,7 @@ namespace CodeStack.SwEx.MacroFeature.Helpers
                     else
                     {
                         throw new NullReferenceException(
-                            $"Referenced entity is missing for {prp.PropertyType.Name}");
+                            $"Referenced entity is missing for {prp.Name}");
                     }
 
                 }
@@ -529,7 +529,7 @@ namespace CodeStack.SwEx.MacroFeature.Helpers
         internal void Parse(object parameters,
             out string[] paramNames, out int[] paramTypes,
             out string[] paramValues, out object[] selection,
-            out int[] dimTypes, out double[] dimValues, out IBody2[] editBodies)
+            out int[] dimTypes, out double[] dimValues, out IBody2[] editBodies, bool removeDanglingRefs = false)
         {
             var paramNamesList = new List<string>();
             var paramTypesList = new List<int>();
@@ -542,7 +542,7 @@ namespace CodeStack.SwEx.MacroFeature.Helpers
             TraverseParametersDefinition(parameters.GetType(),
                 (prp) =>
                 {
-                    ReadObjectsValueFromProperty(parameters, prp, selectionList);
+                    ReadObjectsValueFromProperty(parameters, prp, selectionList, removeDanglingRefs);
                 },
                 (dimType, prp) =>
                 {
@@ -552,7 +552,7 @@ namespace CodeStack.SwEx.MacroFeature.Helpers
                 },
                 (prp) => 
                 {
-                    ReadObjectsValueFromProperty(parameters, prp, editBodiesList);
+                    ReadObjectsValueFromProperty(parameters, prp, editBodiesList, removeDanglingRefs);
                 },
                 prp =>
                 {
@@ -613,7 +613,7 @@ namespace CodeStack.SwEx.MacroFeature.Helpers
             dimTypes = dimsList.Select(d => (int)d.Item2.Item1).ToArray();
             dimValues = dimsList.Select(d => d.Item2.Item2).ToArray();
 
-            editBodies = editBodiesList.Select(b => b.Item2).Where(b => b != null).ToArray();
+            editBodies = editBodiesList.Select(b => b.Item2).ToArray();
         }
 
         private void AddParametersForObjects<T>(List<Tuple<string, T>> objects,
@@ -633,7 +633,7 @@ namespace CodeStack.SwEx.MacroFeature.Helpers
         }
 
         private void ReadObjectsValueFromProperty<T>(object parameters,
-            PropertyInfo prp, List<Tuple<string, T>> list)
+            PropertyInfo prp, List<Tuple<string, T>> list, bool removeNulls)
             where T : class
         {
             var val = prp.GetValue(parameters, null);
@@ -642,7 +642,10 @@ namespace CodeStack.SwEx.MacroFeature.Helpers
             {
                 foreach (T lstElem in val as IList)
                 {
-                    list.Add(new Tuple<string, T>(prp.Name, lstElem));
+                    if (!removeNulls || lstElem != null)
+                    {
+                        list.Add(new Tuple<string, T>(prp.Name, lstElem));
+                    }
                 }
             }
             else
