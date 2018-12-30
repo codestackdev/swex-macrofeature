@@ -18,6 +18,7 @@ using SolidWorks.Interop.swconst;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
@@ -27,9 +28,31 @@ namespace CodeStack.SwEx.MacroFeature.Helpers
 {
     internal class MacroFeatureParametersParser
     {
-        private const string VERSION_PARAMETERS_NAME = "__paramsVersion";
-        private const string VERSION_DIMENSIONS_NAME = "__dimsVersion";
+        private class DimensionParamData
+        {
+            internal swDimensionType_e Type { get; private set; }
+            internal double Value { get; private set; }
 
+            internal DimensionParamData(swDimensionType_e type, double val)
+            {
+                Type = type;
+                Value = val;
+            }
+        }
+
+        private class PropertyObject<TObject>
+        {
+            internal TObject Object { get; private set; }
+            internal string PropertyName { get; private set; }
+            internal PropertyObject(string prpName, TObject obj)
+            {
+                PropertyName = prpName;
+                Object = obj;
+            }
+        }
+
+        private const string VERSION_DIMENSIONS_NAME = "__dimsVersion";
+        private const string VERSION_PARAMETERS_NAME = "__paramsVersion";
         private string[] m_CurrentIcons;
 
         internal MacroFeatureParametersParser()
@@ -42,8 +65,21 @@ namespace CodeStack.SwEx.MacroFeature.Helpers
             m_CurrentIcons = MacroFeatureIconInfo.GetIcons(macroFeatType, app.SupportsHighResIcons());
         }
 
-        internal TParams GetParameters<TParams>(IFeature feat, IMacroFeatureData featData, IModelDoc2 model, 
-            out IDisplayDimension[] dispDims, out IBody2[] editBodies, out MacroFeatureOutdateState_e state)
+        internal static void ReleaseDisplayDimensions(IDisplayDimension[] dispDims)
+        {
+            if (dispDims != null)
+            {
+                for (int i = 0; i < dispDims.Length; i++)
+                {
+                    var dispDim = dispDims[i];
+                    dispDims[i] = null;
+                    ReleaseDimension(dispDim);
+                }
+            }
+        }
+
+        internal TParams GetParameters<TParams>(IFeature feat, IMacroFeatureData featData, IModelDoc2 model,
+                    out IDisplayDimension[] dispDims, out IBody2[] editBodies, out MacroFeatureOutdateState_e state)
             where TParams : class, new()
         {
             return GetParameters(feat, featData, model, typeof(TParams), out dispDims, out editBodies, out state) as TParams;
@@ -192,8 +228,245 @@ namespace CodeStack.SwEx.MacroFeature.Helpers
             }
         }
 
+        internal void Parse(object parameters,
+            out string[] paramNames, out int[] paramTypes,
+            out string[] paramValues, out object[] selection,
+            out int[] dimTypes, out double[] dimValues, out IBody2[] editBodies, bool removeDanglingRefs = false)
+        {
+            var paramNamesList = new List<string>();
+            var paramTypesList = new List<int>();
+            var paramValuesList = new List<string>();
+
+            var selectionList = new List<PropertyObject<object>>();
+            var dimsList = new List<PropertyObject<DimensionParamData>>();
+            var editBodiesList = new List<PropertyObject<IBody2>>();
+
+            TraverseParametersDefinition(parameters.GetType(),
+                (prp) =>
+                {
+                    ReadObjectsValueFromProperty(parameters, prp, selectionList, removeDanglingRefs);
+                },
+                (dimType, prp) =>
+                {
+                    var val = Convert.ToDouble(prp.GetValue(parameters, null));
+                    dimsList.Add(new PropertyObject<DimensionParamData>(
+                        prp.Name, new DimensionParamData(dimType, val)));
+                },
+                (prp) =>
+                {
+                    ReadObjectsValueFromProperty(parameters, prp, editBodiesList, removeDanglingRefs);
+                },
+                prp =>
+                {
+                    swMacroFeatureParamType_e paramType;
+
+                    if (prp.PropertyType == typeof(int))
+                    {
+                        paramType = swMacroFeatureParamType_e.swMacroFeatureParamTypeInteger;
+                    }
+                    else if (prp.PropertyType == typeof(double))
+                    {
+                        paramType = swMacroFeatureParamType_e.swMacroFeatureParamTypeDouble;
+                    }
+                    else
+                    {
+                        paramType = swMacroFeatureParamType_e.swMacroFeatureParamTypeString;
+                    }
+
+                    var val = prp.GetValue(parameters, null);
+
+                    paramNamesList.Add(prp.Name);
+                    paramTypesList.Add((int)paramType);
+                    paramValuesList.Add(Convert.ToString(val));
+                });
+
+            parameters.GetType().TryGetAttribute<ParametersVersionAttribute>(a =>
+            {
+                var setVersionFunc = new Action<string, Version>((n, v) =>
+                {
+                    var versParamIndex = paramNamesList.IndexOf(n);
+
+                    if (versParamIndex == -1)
+                    {
+                        paramNamesList.Add(n);
+                        paramValuesList.Add(v.ToString());
+                        paramTypesList.Add((int)swMacroFeatureParamType_e.swMacroFeatureParamTypeString);
+                    }
+                    else
+                    {
+                        paramValuesList[versParamIndex] = v.ToString();
+                    }
+                });
+
+                setVersionFunc.Invoke(VERSION_PARAMETERS_NAME, a.Version);
+                setVersionFunc.Invoke(VERSION_DIMENSIONS_NAME, a.Version);
+            });
+
+            selection = AddParametersForObjects(selectionList, paramNamesList, paramTypesList, paramValuesList);
+            var dimParams = AddParametersForObjects(dimsList, paramNamesList, paramTypesList, paramValuesList);
+            editBodies = AddParametersForObjects(editBodiesList, paramNamesList, paramTypesList, paramValuesList);
+
+            paramNames = paramNamesList.ToArray();
+            paramTypes = paramTypesList.ToArray();
+            paramValues = paramValuesList.ToArray();
+
+            if (dimParams != null)
+            {
+                dimTypes = dimParams.Select(d => (int)d.Type).ToArray();
+                dimValues = dimParams.Select(d => d.Value).ToArray();
+            }
+            else
+            {
+                dimTypes = null;
+                dimValues = null;
+            }
+        }
+
+        internal void SetParameters(IModelDoc2 model, IFeature feat,
+            IMacroFeatureData featData, object parameters, out MacroFeatureOutdateState_e state)
+        {
+            string[] paramNames;
+            int[] paramTypes;
+            string[] paramValues;
+            object[] selection;
+            int[] dimTypes;
+            double[] dimValues;
+            IBody2[] bodies;
+
+            Parse(parameters,
+                out paramNames, out paramTypes, out paramValues,
+                out selection, out dimTypes, out dimValues, out bodies);
+
+            if (selection.Any())
+            {
+                var dispWraps = selection.Select(s => new DispatchWrapper(s)).ToArray();
+
+                featData.SetSelections2(dispWraps, new int[selection.Length], new IView[selection.Length]);
+            }
+
+            featData.EditBodies = bodies;
+
+            var dispDimsObj = featData.GetDisplayDimensions() as object[];
+
+            IDisplayDimension[] dispDims = null;
+
+            if (dispDimsObj != null)
+            {
+                dispDims = new IDisplayDimension[dispDimsObj.Length];
+
+                for (int i = 0; i < dispDimsObj.Length; i++)
+                {
+                    dispDims[i] = dispDimsObj[i] as IDisplayDimension;
+                    dispDimsObj[i] = null;
+                }
+            }
+
+            var dimsVersion = GetDimensionsVersion(featData);
+
+            ConvertParameters(parameters.GetType(), dimsVersion, conv =>
+            {
+                dispDims = conv.ConvertDisplayDimensions(model, feat, dispDims);
+            });
+
+            if (dispDims != null)
+            {
+                try
+                {
+                    if (dispDims.Length != dimValues.Length)
+                    {
+                        throw new ParametersMismatchException("Dimensions mismatch");
+                    }
+
+                    for (int i = 0; i < dispDims.Length; i++)
+                    {
+                        var dispDim = dispDims[i];
+
+                        if (!(dispDim is DisplayDimensionPlaceholder))
+                        {
+                            SetAndReleaseDimension(dispDim, i, dimValues[i],
+                                featData.CurrentConfiguration.Name);
+                        }
+                    }
+                }
+                catch
+                {
+                    ReleaseDisplayDimensions(dispDims);
+                    throw;
+                }
+            }
+
+            state = GetState(featData, dispDims);
+
+            if (paramNames.Any())
+            {
+                //macro feature dimensions cannot be changed in the existing feature
+                //reverting the dimensions version
+                if (state.HasFlag(MacroFeatureOutdateState_e.Dimensions))
+                {
+                    var index = Array.IndexOf(paramNames, VERSION_DIMENSIONS_NAME);
+                    paramValues[index] = dimsVersion.ToString();
+                }
+
+                featData.SetParameters(paramNames, paramTypes, paramValues);
+            }
+        }
+
+        private static void ReleaseDimension(IDisplayDimension dispDim, Dimension dim = null)
+        {
+            //NOTE: releasing the pointers as unreleased pointer might cause crash
+
+            if (dim != null && Marshal.IsComObject(dim))
+            {
+                Marshal.ReleaseComObject(dim);
+                dim = null;
+            }
+
+            if (dispDim != null && Marshal.IsComObject(dispDim))
+            {
+                Marshal.ReleaseComObject(dispDim);
+                dispDim = null;
+            }
+
+            GC.Collect();
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+        }
+
+        private T[] AddParametersForObjects<T>(List<PropertyObject<T>> objects,
+            List<string> paramNamesList, List<int> paramTypesList,
+            List<string> paramValuesList)
+            where T : class
+        {
+            T[] retVal = null;
+
+            if (objects != null && objects.Any())
+            {
+                var allObjects = objects.Select(o => o.Object).Distinct().ToList();
+
+                var paramsGroup = objects.GroupBy(o => o.PropertyName).ToDictionary(g => g.Key,
+                    g =>
+                    {
+                        return string.Join(",", g.Select(
+                            e =>
+                            {
+                                var index = allObjects.IndexOf(e.Object);
+                                Debug.Assert(index != -1);
+                                return index;
+                            }).ToArray());
+                    });
+
+                paramNamesList.AddRange(paramsGroup.Keys);
+                paramValuesList.AddRange(paramsGroup.Values);
+                paramTypesList.AddRange(Enumerable.Repeat((int)swMacroFeatureParamType_e.swMacroFeatureParamTypeString, paramsGroup.Count));
+
+                retVal = allObjects.ToArray();
+            }
+
+            return retVal;
+        }
+
         private void AssignObjectsToProperty(object resParams, Array availableObjects,
-            PropertyInfo prp, Dictionary<string, string> parameters)
+                                            PropertyInfo prp, Dictionary<string, string> parameters)
         {
             var indices = GetObjectIndices(prp, parameters);
 
@@ -261,63 +534,6 @@ namespace CodeStack.SwEx.MacroFeature.Helpers
             }
         }
 
-        private int[] GetObjectIndices(PropertyInfo prp, Dictionary<string, string> parameters)
-        {
-            int[] indices = null;
-
-            string indValues;
-
-            if (parameters.TryGetValue(prp.Name, out indValues))
-            {
-                indices = indValues.Split(',').Select(i => int.Parse(i)).ToArray();
-            }
-            else
-            {
-                //throw new ParametersMismatchException("Object parameter (selection, edit body or dimension) indices have note been updated");
-
-                //TODO: remove - legacy
-                #region Legacy - remove
-
-                var selAtt = prp.TryGetAttribute<ParameterSelectionAttribute>();
-                var dimAtt = prp.TryGetAttribute<ParameterDimensionAttribute>();
-                var editBodyAtt = prp.TryGetAttribute<ParameterEditBodyAttribute>();
-#pragma warning disable CS0618
-                if (selAtt != null && selAtt.SelectionIndex != -1)
-                {
-                    indices = new int[] { selAtt.SelectionIndex };
-                }
-                else if (dimAtt != null && dimAtt.DimensionIndex != -1)
-                {
-                    indices = new int[] { dimAtt.DimensionIndex };
-                }
-                else if (editBodyAtt != null && editBodyAtt.BodyIndex != -1)
-                {
-                    indices = new int[] { editBodyAtt.BodyIndex };
-                }
-                else
-                {
-                    throw new ParametersMismatchException("Object parameter (selection, edit body or dimension) indices have note been updated");
-                }
-#pragma warning restore
-                #endregion
-            }
-
-            return indices;
-        }
-
-        internal static void ReleaseDisplayDimensions(IDisplayDimension[] dispDims)
-        {
-            if (dispDims != null)
-            {
-                for (int i = 0; i < dispDims.Length; i++)
-                {
-                    var dispDim = dispDims[i];
-                    dispDims[i] = null;
-                    ReleaseDimension(dispDim);
-                }
-            }
-        }
-
         private void ConvertParameters(Type paramsType, Version paramVersion,
             Action<IParameterConverter> converter)
         {
@@ -362,98 +578,69 @@ namespace CodeStack.SwEx.MacroFeature.Helpers
             }
         }
 
-        internal void SetParameters(IModelDoc2 model, IFeature feat,
-            IMacroFeatureData featData, object parameters, out MacroFeatureOutdateState_e state)
-        {
-            string[] paramNames;
-            int[] paramTypes;
-            string[] paramValues;
-            object[] selection;
-            int[] dimTypes;
-            double[] dimValues;
-            IBody2[] bodies;
-
-            Parse(parameters,
-                out paramNames, out paramTypes, out paramValues,
-                out selection, out dimTypes, out dimValues, out bodies);
-
-            if (selection.Any())
-            {
-                var dispWraps = selection.Select(s => new DispatchWrapper(s)).ToArray();
-
-                featData.SetSelections2(dispWraps, new int[selection.Length], new IView[selection.Length]);
-            }
-
-            featData.EditBodies = bodies;
-
-            var dispDimsObj = featData.GetDisplayDimensions() as object[];
-
-            IDisplayDimension[] dispDims = null;
-
-            if (dispDimsObj != null)
-            {
-                dispDims = new IDisplayDimension[dispDimsObj.Length];
-
-                for (int i = 0; i < dispDimsObj.Length; i++)
-                {
-                    dispDims[i] = dispDimsObj[i] as IDisplayDimension;
-                    dispDimsObj[i] = null;
-                }
-            }
-
-            var dimsVersion = GetDimensionsVersion(featData);
-
-            ConvertParameters(parameters.GetType(), dimsVersion, conv =>
-            {
-                dispDims = conv.ConvertDisplayDimensions(model, feat, dispDims);
-            });
-            
-            if (dispDims != null)
-            {
-                try
-                {
-                    if (dispDims.Length != dimValues.Length)
-                    {
-                        throw new ParametersMismatchException("Dimensions mismatch");
-                    }
-
-                    for (int i = 0; i < dispDims.Length; i++)
-                    {
-                        var dispDim = dispDims[i];
-
-                        if (!(dispDim is DisplayDimensionPlaceholder))
-                        {
-                            SetAndReleaseDimension(dispDim, i, dimValues[i],
-                                featData.CurrentConfiguration.Name);
-                        }
-                    }
-                }
-                catch
-                {
-                    ReleaseDisplayDimensions(dispDims);
-                    throw;
-                }
-            }
-
-            state = GetState(featData, dispDims);
-
-            if (paramNames.Any())
-            {
-                //macro feature dimensions cannot be changed in the existing feature
-                //reverting the dimensions version
-                if (state.HasFlag(MacroFeatureOutdateState_e.Dimensions))
-                {
-                    var index = Array.IndexOf(paramNames, VERSION_DIMENSIONS_NAME);
-                    paramValues[index] = dimsVersion.ToString();
-                }
-
-                featData.SetParameters(paramNames, paramTypes, paramValues);
-            }
-        }
-
         private Version GetDimensionsVersion(IMacroFeatureData featData)
         {
             return GetVersion(featData, VERSION_DIMENSIONS_NAME);
+        }
+
+        private int[] GetObjectIndices(PropertyInfo prp, Dictionary<string, string> parameters)
+        {
+            int[] indices = null;
+
+            string indValues;
+
+            if (parameters.TryGetValue(prp.Name, out indValues))
+            {
+                indices = indValues.Split(',').Select(i => int.Parse(i)).ToArray();
+            }
+            else
+            {
+                //throw new ParametersMismatchException("Object parameter (selection, edit body or dimension) indices have note been updated");
+
+                //TODO: remove - legacy
+                #region Legacy - remove
+
+                var selAtt = prp.TryGetAttribute<ParameterSelectionAttribute>();
+                var dimAtt = prp.TryGetAttribute<ParameterDimensionAttribute>();
+                var editBodyAtt = prp.TryGetAttribute<ParameterEditBodyAttribute>();
+#pragma warning disable CS0618
+                if (selAtt != null && selAtt.SelectionIndex != -1)
+                {
+                    indices = new int[] { selAtt.SelectionIndex };
+                }
+                else if (dimAtt != null && dimAtt.DimensionIndex != -1)
+                {
+                    indices = new int[] { dimAtt.DimensionIndex };
+                }
+                else if (editBodyAtt != null && editBodyAtt.BodyIndex != -1)
+                {
+                    indices = new int[] { editBodyAtt.BodyIndex };
+                }
+                else
+                {
+                    throw new ParametersMismatchException("Object parameter (selection, edit body or dimension) indices have note been updated");
+                }
+#pragma warning restore
+                #endregion
+            }
+
+            return indices;
+        }
+        private string GetParameterValue(Dictionary<string, string> parameters, string name)
+        {
+            if (parameters == null)
+            {
+                throw new ArgumentNullException(nameof(parameters));
+            }
+
+            string value;
+
+            if (!parameters.TryGetValue(name, out value))
+            {
+                throw new IndexOutOfRangeException($"Failed to read parameter {name}");
+            }
+
+            return value;
         }
 
         private MacroFeatureOutdateState_e GetState(IMacroFeatureData featData, IDisplayDimension[] dispDims)
@@ -493,147 +680,8 @@ namespace CodeStack.SwEx.MacroFeature.Helpers
             return dimsVersion;
         }
 
-        private void SetAndReleaseDimension(IDisplayDimension dispDim,
-            int index, double val, string confName)
-        {
-            var dim = dispDim.GetDimension2(0);
-
-            dim.SetSystemValue3(val,
-                (int)swSetValueInConfiguration_e.swSetValue_InSpecificConfigurations,
-                new string[] { confName });
-
-            ReleaseDimension(dispDim, dim);
-        }
-
-        private static void ReleaseDimension(IDisplayDimension dispDim, Dimension dim = null)
-        {
-            //NOTE: releasing the pointers as unreleased pointer might cause crash
-
-            if (dim != null && Marshal.IsComObject(dim))
-            {
-                Marshal.ReleaseComObject(dim);
-                dim = null;
-            }
-
-            if (dispDim != null && Marshal.IsComObject(dispDim))
-            {
-                Marshal.ReleaseComObject(dispDim);
-                dispDim = null;
-            }
-
-            GC.Collect();
-            GC.Collect();
-            GC.WaitForPendingFinalizers();
-        }
-
-        internal void Parse(object parameters,
-            out string[] paramNames, out int[] paramTypes,
-            out string[] paramValues, out object[] selection,
-            out int[] dimTypes, out double[] dimValues, out IBody2[] editBodies, bool removeDanglingRefs = false)
-        {
-            var paramNamesList = new List<string>();
-            var paramTypesList = new List<int>();
-            var paramValuesList = new List<string>();
-
-            var selectionList = new List<Tuple<string, object>>();
-            var dimsList = new List<Tuple<string, Tuple<swDimensionType_e, double>>>();
-            var editBodiesList = new List<Tuple<string, IBody2>>();
-
-            TraverseParametersDefinition(parameters.GetType(),
-                (prp) =>
-                {
-                    ReadObjectsValueFromProperty(parameters, prp, selectionList, removeDanglingRefs);
-                },
-                (dimType, prp) =>
-                {
-                    var val = Convert.ToDouble(prp.GetValue(parameters, null));
-                    dimsList.Add(new Tuple<string, Tuple<swDimensionType_e, double>>(
-                        prp.Name, new Tuple<swDimensionType_e, double>(dimType, val)));
-                },
-                (prp) => 
-                {
-                    ReadObjectsValueFromProperty(parameters, prp, editBodiesList, removeDanglingRefs);
-                },
-                prp =>
-                {
-                    swMacroFeatureParamType_e paramType;
-
-                    if (prp.PropertyType == typeof(int))
-                    {
-                        paramType = swMacroFeatureParamType_e.swMacroFeatureParamTypeInteger;
-                    }
-                    else if (prp.PropertyType == typeof(double))
-                    {
-                        paramType = swMacroFeatureParamType_e.swMacroFeatureParamTypeDouble;
-                    }
-                    else
-                    {
-                        paramType = swMacroFeatureParamType_e.swMacroFeatureParamTypeString;
-                    }
-
-                    var val = prp.GetValue(parameters, null);
-
-                    paramNamesList.Add(prp.Name);
-                    paramTypesList.Add((int)paramType);
-                    paramValuesList.Add(Convert.ToString(val));
-                });
-            
-            parameters.GetType().TryGetAttribute<ParametersVersionAttribute>(a => 
-            {
-                var setVersionFunc = new Action<string, Version>((n, v) => 
-                {
-                    var versParamIndex = paramNamesList.IndexOf(n);
-
-                    if (versParamIndex == -1)
-                    {
-                        paramNamesList.Add(n);
-                        paramValuesList.Add(v.ToString());
-                        paramTypesList.Add((int)swMacroFeatureParamType_e.swMacroFeatureParamTypeString);
-                    }
-                    else
-                    {
-                        paramValuesList[versParamIndex] = v.ToString();
-                    }
-                });
-
-                setVersionFunc.Invoke(VERSION_PARAMETERS_NAME, a.Version);
-                setVersionFunc.Invoke(VERSION_DIMENSIONS_NAME, a.Version);
-            });
-
-            AddParametersForObjects(selectionList, paramNamesList, paramTypesList, paramValuesList);
-            AddParametersForObjects(dimsList, paramNamesList, paramTypesList, paramValuesList);
-            AddParametersForObjects(editBodiesList, paramNamesList, paramTypesList, paramValuesList);
-
-            paramNames = paramNamesList.ToArray();
-            paramTypes = paramTypesList.ToArray();
-            paramValues = paramValuesList.ToArray();
-
-            selection = selectionList.Select(s => s.Item2).Where(s => s != null).ToArray();
-
-            dimTypes = dimsList.Select(d => (int)d.Item2.Item1).ToArray();
-            dimValues = dimsList.Select(d => d.Item2.Item2).ToArray();
-
-            editBodies = editBodiesList.Select(b => b.Item2).ToArray();
-        }
-
-        private void AddParametersForObjects<T>(List<Tuple<string, T>> objects,
-            List<string> paramNamesList, List<int> paramTypesList,
-            List<string> paramValuesList)
-            where T : class
-        {
-            if (objects != null && objects.Any())
-            {
-                var paramsGroup = objects.GroupBy(o => o.Item1).ToDictionary(g => g.Key,
-                    g => string.Join(",", g.Select(e => e.Item2 != null ? objects.IndexOf(e) : -1).ToArray()));
-
-                paramNamesList.AddRange(paramsGroup.Keys);
-                paramValuesList.AddRange(paramsGroup.Values);
-                paramTypesList.AddRange(Enumerable.Repeat((int)swMacroFeatureParamType_e.swMacroFeatureParamTypeString, paramsGroup.Count));
-            }
-        }
-
         private void ReadObjectsValueFromProperty<T>(object parameters,
-            PropertyInfo prp, List<Tuple<string, T>> list, bool removeNulls)
+            PropertyInfo prp, List<PropertyObject<T>> list, bool removeNulls)
             where T : class
         {
             var val = prp.GetValue(parameters, null);
@@ -644,14 +692,26 @@ namespace CodeStack.SwEx.MacroFeature.Helpers
                 {
                     if (!removeNulls || lstElem != null)
                     {
-                        list.Add(new Tuple<string, T>(prp.Name, lstElem));
+                        list.Add(new PropertyObject<T>(prp.Name, lstElem));
                     }
                 }
             }
             else
             {
-                list.Add(new Tuple<string, T>(prp.Name, val as T));
+                list.Add(new PropertyObject<T>(prp.Name, val as T));
             }
+        }
+
+        private void SetAndReleaseDimension(IDisplayDimension dispDim,
+                    int index, double val, string confName)
+        {
+            var dim = dispDim.GetDimension2(0);
+
+            dim.SetSystemValue3(val,
+                (int)swSetValueInConfiguration_e.swSetValue_InSpecificConfigurations,
+                new string[] { confName });
+
+            ReleaseDimension(dispDim, dim);
         }
 
         private void TraverseParametersDefinition(Type paramsType,
@@ -694,23 +754,6 @@ namespace CodeStack.SwEx.MacroFeature.Helpers
                     }
                 }
             }
-        }
-
-        private string GetParameterValue(Dictionary<string, string> parameters, string name)
-        {
-            if (parameters == null)
-            {
-                throw new ArgumentNullException(nameof(parameters));
-            }
-
-            string value;
-
-            if (!parameters.TryGetValue(name, out value))
-            {
-                throw new IndexOutOfRangeException($"Failed to read parameter {name}");
-            }
-
-            return value;
         }
     }
 }
