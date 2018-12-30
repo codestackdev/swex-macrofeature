@@ -109,6 +109,8 @@ namespace SolidWorks.Interop.sldworks
 
             if (typeof(TMacroFeature).IsAssignableToGenericType(typeof(MacroFeatureEx<>)))
             {
+                featData.AccessSelections(model, null);
+
                 var paramsType = typeof(TMacroFeature).GetArgumentsOfGenericType(typeof(MacroFeatureEx<>)).First();
                 IDisplayDimension[] dispDims;
                 IBody2[] editBodies;
@@ -145,20 +147,7 @@ namespace SolidWorks.Interop.sldworks
                 IFeature newFeat = null;
 
                 var name = feat.Name;
-
-                if (feat.Select2(false, -1))
-                {
-                    int DEFAULT_DEL_OPTS = 0;
-                    if (!model.Extension.DeleteSelection2(DEFAULT_DEL_OPTS))
-                    {
-                        Debug.Assert(false, "Failed to delete feature");
-                    }
-                }
-                else
-                {
-                    Debug.Assert(false, "Failed to select feature");
-                }
-
+                
                 if (parameters != null)
                 {
                     newFeat = InsertComFeatureWithParameters(featMgr, typeof(TMacroFeature), parameters);
@@ -167,10 +156,28 @@ namespace SolidWorks.Interop.sldworks
                 {
                     newFeat = InsertComFeature<TMacroFeature>(featMgr);
                 }
+                
+                if (newFeat != null)
+                {
+                    if (feat.Select2(false, -1))
+                    {
+                        int DEFAULT_DEL_OPTS = 0;
+                        if (model.Extension.DeleteSelection2(DEFAULT_DEL_OPTS))
+                        {
+                            newFeat.Name = name;
+                        }
+                        else
+                        {
+                            Debug.Assert(false, "Failed to delete feature");
+                        }
+                    }
+                    else
+                    {
+                        Debug.Assert(false, "Failed to select feature");
+                    }
+                }
 
                 featMgr.EditRollback((int)swMoveRollbackBarTo_e.swMoveRollbackBarToEnd, "");
-
-                newFeat.Name = name;
 
                 return newFeat;
             }
@@ -194,7 +201,7 @@ namespace SolidWorks.Interop.sldworks
 
             m_ParamsParser.Parse(parameters,
                 out paramNames, out paramTypes, out paramValues, out selection,
-                out dimTypes, out dimValues, out editBodies);
+                out dimTypes, out dimValues, out editBodies, true);
             
             return InsertComFeatureBase(featMgr, macroFeatType, paramNames,
                 paramTypes, paramValues, dimTypes, dimValues, selection, editBodies);
@@ -237,7 +244,7 @@ namespace SolidWorks.Interop.sldworks
 
                     Debug.Assert(selRes);
                 }
-
+                
                 var feat = featMgr.InsertMacroFeature3(baseName,
                     progId, null, paramNames, paramTypes,
                     paramValues, dimTypes, dimValues, editBodies, icons, (int)options) as IFeature;

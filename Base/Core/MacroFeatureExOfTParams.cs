@@ -82,7 +82,7 @@ namespace CodeStack.SwEx.MacroFeature
         /// <param name="feature">Pointer to macro feature</param>
         /// <param name="dims">Pointer to dimensions of macro feature</param>
         /// <param name="parameters">Current instance of parameters (including the values of dimensions)</param>
-        /// <remarks>Use the <see cref="DimensionDataExtension.SetDirection(DimensionData, Point, Vector)"/>
+        /// <remarks>Use the <see cref="DimensionDataExtension.SetOrientation(DimensionData, Point, Vector)"/>
         /// helper method to set the dimension orientation and position based on its values</remarks>
         protected virtual void OnSetDimensions(ISldWorks app, IModelDoc2 model, IFeature feature,
             MacroFeatureRebuildResult rebuildResult, DimensionDataCollection dims, TParams parameters)

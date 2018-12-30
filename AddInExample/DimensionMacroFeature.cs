@@ -42,9 +42,9 @@ namespace CodeStack.SwEx.MacroFeature.Example
         protected override void OnSetDimensions(ISldWorks app, IModelDoc2 model, IFeature feature,
             MacroFeatureRebuildResult rebuildResult, DimensionDataCollection dims, DimensionMacroFeatureParams parameters)
         {
-            dims[0].SetDirection(new Point(0, 0, 0), new Vector(0, 1, 0));
-            dims[1].SetDirection(new Point(0, 0, 0), new Vector(0, 0, 1));
-            dims[2].SetDirection(new Point(0, 0, 0), new Vector(1, 0, 0));
+            dims[0].SetOrientation(new Point(0, 0, 0), new Vector(0, 1, 0));
+            dims[1].SetOrientation(new Point(0, 0, 0), new Vector(0, 0, 1));
+            dims[2].SetOrientation(new Point(0, 0, 0), new Vector(1, 0, 0));
         }
     }
 }
