@@ -201,7 +201,7 @@ namespace SolidWorks.Interop.sldworks
 
             m_ParamsParser.Parse(parameters,
                 out paramNames, out paramTypes, out paramValues, out selection,
-                out dimTypes, out dimValues, out editBodies, true);
+                out dimTypes, out dimValues, out editBodies);
             
             return InsertComFeatureBase(featMgr, macroFeatType, paramNames,
                 paramTypes, paramValues, dimTypes, dimValues, selection, editBodies);

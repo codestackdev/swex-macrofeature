@@ -45,7 +45,7 @@ namespace CodeStack.SwEx.MacroFeature.Example
     }
 
     [ComVisible(true)]
-    [Icon(typeof(Resources), nameof(Resources.codestack), "CodeStack\\MacroFeatureExample\\Icons")]
+    [FeatureIcon(typeof(Resources), nameof(Resources.codestack), "CodeStack\\MacroFeatureExample\\Icons")]
     [Options("SwEx.MacroFeature.Params", "CodeStack. Macro feature definition is not registered")]
     public class ParamsMacroFeature : MacroFeatureEx<ParamsMacroFeatureParams>
     {

@@ -73,7 +73,8 @@ namespace CodeStack.SwEx.MacroFeature.Example
             return MacroFeatureRebuildResult.FromBody(cyl, feature.GetDefinition() as IMacroFeatureData);
         }
 
-        protected override void OnSetDimensions(ISldWorks app, IModelDoc2 model, IFeature feature, DimensionDataCollection dims, BoundingCylinderMacroFeatureParams parameters)
+        protected override void OnSetDimensions(ISldWorks app, IModelDoc2 model, IFeature feature,
+            MacroFeatureRebuildResult rebuildResult, DimensionDataCollection dims, BoundingCylinderMacroFeatureParams parameters)
         {
             Point center;
             Vector axis;
@@ -87,7 +88,7 @@ namespace CodeStack.SwEx.MacroFeature.Example
 
             var dimDir = new Vector(axis);
 
-            dims[0].Dimension.SetDirection(dimOrig, dimDir, Math.Abs(extraHeight));
+            dims[0].SetOrientation(dimOrig, dimDir);
         }
 
         private static void GetCylinderParameters(BoundingCylinderMacroFeatureParams parameters, out Point center, out Vector axis,
