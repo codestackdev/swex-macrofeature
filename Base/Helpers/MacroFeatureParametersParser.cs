@@ -231,7 +231,7 @@ namespace CodeStack.SwEx.MacroFeature.Helpers
         internal void Parse(object parameters,
             out string[] paramNames, out int[] paramTypes,
             out string[] paramValues, out object[] selection,
-            out int[] dimTypes, out double[] dimValues, out IBody2[] editBodies, bool removeDanglingRefs = false)
+            out int[] dimTypes, out double[] dimValues, out IBody2[] editBodies)
         {
             var paramNamesList = new List<string>();
             var paramTypesList = new List<int>();
@@ -244,7 +244,7 @@ namespace CodeStack.SwEx.MacroFeature.Helpers
             TraverseParametersDefinition(parameters.GetType(),
                 (prp) =>
                 {
-                    ReadObjectsValueFromProperty(parameters, prp, selectionList, removeDanglingRefs);
+                    ReadObjectsValueFromProperty(parameters, prp, selectionList);
                 },
                 (dimType, prp) =>
                 {
@@ -254,7 +254,7 @@ namespace CodeStack.SwEx.MacroFeature.Helpers
                 },
                 (prp) =>
                 {
-                    ReadObjectsValueFromProperty(parameters, prp, editBodiesList, removeDanglingRefs);
+                    ReadObjectsValueFromProperty(parameters, prp, editBodiesList);
                 },
                 prp =>
                 {
@@ -337,7 +337,7 @@ namespace CodeStack.SwEx.MacroFeature.Helpers
                 out paramNames, out paramTypes, out paramValues,
                 out selection, out dimTypes, out dimValues, out bodies);
 
-            if (selection.Any())
+            if (selection != null && selection.Any())
             {
                 var dispWraps = selection.Select(s => new DispatchWrapper(s)).ToArray();
 
@@ -441,8 +441,10 @@ namespace CodeStack.SwEx.MacroFeature.Helpers
 
             if (objects != null && objects.Any())
             {
-                var allObjects = objects.Select(o => o.Object).Distinct().ToList();
-
+                var allObjects = objects.Select(o => o.Object)
+                    .Distinct()
+                    .Where(o =>  o != null).ToList();
+                
                 var paramsGroup = objects.GroupBy(o => o.PropertyName).ToDictionary(g => g.Key,
                     g =>
                     {
@@ -450,7 +452,6 @@ namespace CodeStack.SwEx.MacroFeature.Helpers
                             e =>
                             {
                                 var index = allObjects.IndexOf(e.Object);
-                                Debug.Assert(index != -1);
                                 return index;
                             }).ToArray());
                     });
@@ -472,60 +473,77 @@ namespace CodeStack.SwEx.MacroFeature.Helpers
 
             if (indices != null && indices.Any())
             {
-                var isEmpty = availableObjects == null && indices.All(i => i == -1);
+                if (availableObjects == null)
+                {
+                    availableObjects = new object[0];
+                }
 
                 object val = null;
 
-                if (!isEmpty)
+                if (indices.All(i => availableObjects.Length > i))
                 {
-                    if ((availableObjects != null && indices.All(i => availableObjects.Length > i)))
+                    if (typeof(IList).IsAssignableFrom(prp.PropertyType))
                     {
-                        if (typeof(IList).IsAssignableFrom(prp.PropertyType))
+                        var lst = prp.GetValue(resParams, null) as IList;
+
+                        if (lst != null)
                         {
-                            var lst = prp.GetValue(resParams, null) as IList;
+                            lst.Clear();
+                        }
+                        else
+                        {
+                            lst = Activator.CreateInstance(prp.PropertyType) as IList;
+                        }
 
-                            if (lst != null)
-                            {
-                                lst.Clear();
-                            }
-                            else
-                            {
-                                lst = Activator.CreateInstance(prp.PropertyType) as IList;
-                            }
+                        val = lst;
 
-                            val = lst;
-
+                        if (indices.Length == 1 && indices.First() == -1)
+                        {
+                            val = null; //no entities in the list
+                        }
+                        else
+                        {
                             foreach (var obj in indices.Select(i =>
                             {
-                                if (i < 0 || availableObjects == null)
+                                if (i != -1)
                                 {
-                                    throw new IndexOutOfRangeException($"Index {i} is out of range for arrays");
+                                    return availableObjects.GetValue(i);
                                 }
-
-                                return availableObjects.GetValue(i);
+                                else
+                                {
+                                    return null;
+                                }
                             }))
                             {
                                 lst.Add(obj);
                             }
                         }
-                        else
-                        {
-                            if (indices.Length > 1)
-                            {
-                                throw new InvalidOperationException($"Multiple selection indices at {prp.Name} could only be associated with the List");
-                            }
-
-                            val = availableObjects.GetValue(indices.First());
-                        }
                     }
                     else
                     {
-                        throw new NullReferenceException(
-                            $"Referenced entity is missing for {prp.Name}");
+                        if (indices.Length > 1)
+                        {
+                            throw new InvalidOperationException($"Multiple selection indices at {prp.Name} could only be associated with the List");
+                        }
+
+                        var index = indices.First();
+
+                        if (index == -1)
+                        {
+                            val = null;
+                        }
+                        else
+                        {
+                            val = availableObjects.GetValue(index);
+                        }
                     }
-
                 }
-
+                else
+                {
+                    throw new NullReferenceException(
+                        $"Referenced entity is missing for {prp.Name}");
+                }
+                
                 prp.SetValue(resParams, val, null);
             }
             else
@@ -681,19 +699,23 @@ namespace CodeStack.SwEx.MacroFeature.Helpers
         }
 
         private void ReadObjectsValueFromProperty<T>(object parameters,
-            PropertyInfo prp, List<PropertyObject<T>> list, bool removeNulls)
+            PropertyInfo prp, List<PropertyObject<T>> list)
             where T : class
         {
             var val = prp.GetValue(parameters, null);
 
             if (val is IList)
             {
-                foreach (T lstElem in val as IList)
+                if ((val as IList).Count != 0)
                 {
-                    if (!removeNulls || lstElem != null)
+                    foreach (T lstElem in val as IList)
                     {
                         list.Add(new PropertyObject<T>(prp.Name, lstElem));
                     }
+                }
+                else
+                {
+                    list.Add(new PropertyObject<T>(prp.Name, null));
                 }
             }
             else

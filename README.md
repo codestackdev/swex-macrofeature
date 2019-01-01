@@ -233,16 +233,14 @@ public class DimensionMacroFeatureParams
 }
 ~~~
 
-It is required to arrange the dimensions after rebuild by overriding the [OnSetDimensions](https://docs.codestack.net/swex/macro-feature/html/M_CodeStack_SwEx_MacroFeature_MacroFeatureEx_1_OnSetDimensions.htm) method. Use [SetDirection](https://docs.codestack.net/swex/macro-feature/html/M_SolidWorks_Interop_sldworks_DimensionEx_SetDirection.htm) helper method to align the dimension.
+It is required to arrange the dimensions after rebuild by overriding the [OnSetDimensions](https://docs.codestack.net/swex/macro-feature/html/M_CodeStack_SwEx_MacroFeature_MacroFeatureEx_1_OnSetDimensions.htm) method. Use [DimensionData::SetOrientation](https://docs.codestack.net/swex/macro-feature/html/M_CodeStack_SwEx_MacroFeature_Data_DimensionDataExtension_SetOrientation.htm) helper method to align the dimension.
 
 ~~~ cs
-protected override void OnSetDimensions(ISldWorks app, IModelDoc2 model, IFeature feature, DimensionDataCollection dims, DimensionMacroFeatureParams parameters)
+protected override void OnSetDimensions(ISldWorks app, IModelDoc2 model, IFeature feature, MacroFeatureRebuildResult rebuildResult, DimensionDataCollection dims, BoundingCylinderMacroFeatureParams parameters)
 {
-    dims[0].Dimension.SetDirection(new Point(0, 0, 0), new Vector(0, 1, 0),
-        parameters.FirstDimension);
+    dims[0].SetOrientation(new Point(0, 0, 0), new Vector(0, 1, 0));
 
-    dims[1].Dimension.SetDirection(new Point(0, 0, 0), new Vector(0, 0, 1),
-        parameters.SecondDimension);
+    dims[1].SetOrientation(new Point(0, 0, 0), new Vector(0, 0, 1));
 }
 ~~~
 
@@ -299,6 +297,5 @@ public class MacroFeatureParamsVersionConverter : ParametersVersionConverter
     }
 }
 ~~~
-
 
 [Read More...](https://www.codestack.net/labs/solidworks/swex/macro-feature/data/backward-compatibility)

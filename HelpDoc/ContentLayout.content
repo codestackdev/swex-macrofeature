@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Topics>
-  <Topic id="4cd362b8-c3db-4b26-9bd7-2f9175eb4856" visible="True" isDefault="true" isSelected="true" title="Welcome to the SwEx.MacroFeature">
+  <Topic id="4cd362b8-c3db-4b26-9bd7-2f9175eb4856" visible="True" isDefault="true" title="Welcome to the SwEx.MacroFeature">
     <HelpKeywords>
       <HelpKeyword index="K" term="Welcome" />
     </HelpKeywords>
@@ -16,5 +16,7 @@
     </Topic>
     <Topic id="v0-2-0" visible="True" title="Version 0.2.0" />
     <Topic id="v0-3-0" visible="True" title="Version 0.3.0" />
+    <Topic id="v0-4-0" visible="True" isSelected="true" title="Version 0.4.0" />
+    <Topic id="v0-4-1" visible="True" title="Version 0.4.1" />
   </Topic>
 </Topics>
