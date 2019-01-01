@@ -31,7 +31,8 @@ namespace CodeStack.SwEx.MacroFeature
 
         public MacroFeatureEx() : base()
         {
-            m_Register = new MacroFeatureRegister<THandler>(MacroFeatureInfo.GetBaseName(this.GetType()));
+            m_Register = new MacroFeatureRegister<THandler>(
+                MacroFeatureInfo.GetBaseName(this.GetType()), this);
         }
 
         [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
@@ -58,8 +59,7 @@ namespace CodeStack.SwEx.MacroFeature
         {
             return swMacroFeatureSecurityOptions_e.swMacroFeatureSecurityByDefault;
         }
-
-
+        
         /// <inheritdoc cref="MacroFeatureEx{TParams}.OnRebuild(ISldWorks, IModelDoc2, IFeature, TParams)"/>
         /// <param name="handler">Pointer to the macro feature handler of the feature being rebuilt</param>
         protected virtual MacroFeatureRebuildResult OnRebuild(THandler handler, TParams parameters)
@@ -78,6 +78,9 @@ namespace CodeStack.SwEx.MacroFeature
         {
             bool isNew = true;
             var handler = m_Register.EnsureFeatureRegistered(app, model, feature, out isNew);
+
+            Logger.Log($"Getting macro feature handler. New={isNew}");
+
             return handler;
         }
     }

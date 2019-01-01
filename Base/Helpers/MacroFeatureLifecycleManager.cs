@@ -5,6 +5,8 @@
 //Product URL: https://www.codestack.net/labs/solidworks/swex/macro-feature
 //**********************
 
+using CodeStack.SwEx.Common.Base;
+using CodeStack.SwEx.Common.Diagnostics;
 using SolidWorks.Interop.sldworks;
 using SolidWorks.Interop.swconst;
 using System;
@@ -26,10 +28,14 @@ namespace CodeStack.SwEx.MacroFeature.Helpers
 
         private Dictionary<string, IFeature> m_UnloadQueue;
 
-        internal MacroFeatureLifecycleManager(IModelDoc2 model, string macroFeatBaseName)
+        private readonly ILogger m_Logger;
+
+        internal MacroFeatureLifecycleManager(IModelDoc2 model, string macroFeatBaseName, ILogger logger)
         {
             m_Model = model;
             m_MacroFeatBaseName = macroFeatBaseName;
+
+            m_Logger = logger;
 
             m_UnloadQueue = new Dictionary<string, IFeature>(
                 StringComparer.CurrentCultureIgnoreCase);
@@ -39,6 +45,8 @@ namespace CodeStack.SwEx.MacroFeature.Helpers
 
         private void AttachEvents()
         {
+            m_Logger.Log("Attaching events for lifecycle manager");
+
             if (m_Model is IPartDoc)
             {
                 (m_Model as PartDoc).DeleteItemPreNotify += OnDeleteItemPreNotify;
@@ -61,6 +69,8 @@ namespace CodeStack.SwEx.MacroFeature.Helpers
 
         private int OnDeleteItemNotify(int EntityType, string itemName)
         {
+            m_Logger.Log($"Deleting item {itemName} of {EntityType}");
+
             if (EntityType == (int)swNotifyEntityType_e.swNotifyFeature)
             {
                 IFeature feat;
@@ -82,6 +92,8 @@ namespace CodeStack.SwEx.MacroFeature.Helpers
 
         private int OnDeleteItemPreNotify(int entityType, string itemName)
         {
+            m_Logger.Log($"Pre deleting item {itemName} of {entityType}");
+
             IFeature feat;
 
             if (TryGetMacroFeature(entityType, itemName, out feat))
@@ -149,6 +161,8 @@ namespace CodeStack.SwEx.MacroFeature.Helpers
 
         private void DetachEvents()
         {
+            m_Logger.Log("Detacjing events for lifecycle manager");
+
             if (m_Model is IPartDoc)
             {
                 (m_Model as PartDoc).DeleteItemPreNotify -= OnDeleteItemPreNotify;
@@ -171,6 +185,8 @@ namespace CodeStack.SwEx.MacroFeature.Helpers
 
         private int OnDestroyNotify2(int DestroyType)
         {
+            m_Logger.Log($"Destroying model {DestroyType}");
+
             ModelDisposed?.Invoke(m_Model);
             DetachEvents();
 

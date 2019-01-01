@@ -5,6 +5,8 @@
 //Product URL: https://www.codestack.net/labs/solidworks/swex/macro-feature
 //**********************
 
+using CodeStack.SwEx.Common.Base;
+using CodeStack.SwEx.Common.Diagnostics;
 using CodeStack.SwEx.MacroFeature.Base;
 using SolidWorks.Interop.sldworks;
 using SolidWorks.Interop.swconst;
@@ -30,10 +32,13 @@ namespace CodeStack.SwEx.MacroFeature.Helpers
         private readonly ModelDictionary m_Register;
         private readonly Dictionary<IModelDoc2, MacroFeatureLifecycleManager> m_LifecycleManagers;
         private readonly string m_BaseName;
-        
-        internal MacroFeatureRegister(string baseName)
+        private readonly ILogger m_Logger;
+
+        internal MacroFeatureRegister(string baseName, IModule parentModule)
         {           
             m_BaseName = baseName;
+            m_Logger = LoggerFactory.Create(parentModule, this.GetType().Name);
+
             m_Register = new ModelDictionary();
             m_LifecycleManagers = new Dictionary<IModelDoc2, MacroFeatureLifecycleManager>();
         }
@@ -46,10 +51,12 @@ namespace CodeStack.SwEx.MacroFeature.Helpers
 
             if (!m_Register.TryGetValue(model, out featsDict))
             {
+                m_Logger.Log($"{model?.GetTitle()} model is not registered in the register");
+
                 featsDict = new MacroFeatureDictionary();
                 m_Register.Add(model, featsDict);
 
-                var lcm = new MacroFeatureLifecycleManager(model, m_BaseName);
+                var lcm = new MacroFeatureLifecycleManager(model, m_BaseName, m_Logger);
                 lcm.ModelDisposed += OnModelDisposed;
                 lcm.FeatureDisposed += OnFeatureDisposed;
                 m_LifecycleManagers.Add(model, lcm);
@@ -58,6 +65,8 @@ namespace CodeStack.SwEx.MacroFeature.Helpers
             THandler handler = null;
             if (!featsDict.TryGetValue(feat, out handler))
             {
+                m_Logger.Log($"{feat?.Name} feature in {model?.GetTitle()} model is not registered in the register");
+
                 handler = new THandler();
                 featsDict.Add(feat, handler);
                 handler.Init(app, model, feat);

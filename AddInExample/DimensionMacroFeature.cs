@@ -9,6 +9,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using CodeStack.SwEx.MacroFeature.Base;
 using CodeStack.SwEx.MacroFeature.Data;
+using System.Runtime.CompilerServices;
 
 namespace CodeStack.SwEx.MacroFeature.Example
 {
@@ -19,8 +20,11 @@ namespace CodeStack.SwEx.MacroFeature.Example
 
         [ParameterDimension(swDimensionType_e.swLinearDimension)]
         public double RefCalcDimension { get; set; }
-    }
 
+        [ParameterDimension(swDimensionType_e.swRadialDimension)]
+        public double RefRadDimension { get; set; } = 0.025;
+    }
+    
     [ComVisible(true)]
     public class DimensionMacroFeature : MacroFeatureEx<DimensionMacroFeatureParams>
     {
@@ -35,13 +39,12 @@ namespace CodeStack.SwEx.MacroFeature.Example
             return MacroFeatureRebuildResult.FromStatus(true);
         }
 
-        protected override void OnSetDimensions(ISldWorks app, IModelDoc2 model, IFeature feature, DimensionDataCollection dims, DimensionMacroFeatureParams parameters)
+        protected override void OnSetDimensions(ISldWorks app, IModelDoc2 model, IFeature feature,
+            MacroFeatureRebuildResult rebuildResult, DimensionDataCollection dims, DimensionMacroFeatureParams parameters)
         {
-            dims[0].Dimension.SetDirection(new Point(0, 0, 0), new Vector(0, 1, 0),
-                parameters.RefDimension);
-
-            dims[1].Dimension.SetDirection(new Point(0, 0, 0), new Vector(0, 0, 1),
-                parameters.RefCalcDimension);
+            dims[0].SetOrientation(new Point(0, 0, 0), new Vector(0, 1, 0));
+            dims[1].SetOrientation(new Point(0, 0, 0), new Vector(0, 0, 1));
+            dims[2].SetOrientation(new Point(0, 0, 0), new Vector(1, 0, 0));
         }
     }
 }

@@ -18,7 +18,7 @@ namespace CodeStack.SwEx.MacroFeature.Base
     /// </summary>
     public class MacroFeatureRebuildBodyResult : MacroFeatureRebuildResult
     {
-        internal MacroFeatureRebuildBodyResult(params IBody2[] bodies) : this(null, false, bodies)
+        internal protected MacroFeatureRebuildBodyResult(params IBody2[] bodies) : this(null, false, bodies)
         {
         }
 
@@ -41,7 +41,7 @@ namespace CodeStack.SwEx.MacroFeature.Base
             }
         }
 
-        internal MacroFeatureRebuildBodyResult(IMacroFeatureData featData,
+        internal protected MacroFeatureRebuildBodyResult(IMacroFeatureData featData,
             bool updateEntityIds, params IBody2[] bodies) : base(GetBodyResult(bodies))
         {
             featData.EnableMultiBodyConsume = true;

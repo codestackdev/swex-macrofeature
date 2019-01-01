@@ -36,7 +36,7 @@ namespace CodeStack.SwEx.MacroFeature.Base
             }
         }
 
-        internal MacroFeatureRebuldStatusResult(bool status, string error = "")
+        internal protected MacroFeatureRebuldStatusResult(bool status, string error = "")
             : base(GetResult(status, error))
         {
         }
