@@ -2,7 +2,7 @@
 <package >
   <metadata>
     <id>CodeStack.SwEx.MacroFeature</id>
-    <version>0.4.1</version>
+    <version>0.4.2</version>
     <title>Framework for developing custom macro features in SOLIDWORKS</title>
     <authors>CodeStack</authors>
     <owners>CodeStack</owners>
@@ -12,7 +12,7 @@
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>Framework for developing custom macro features in SOLIDWORKS</description>
     <releaseNotes></releaseNotes>
-    <copyright>Copyright © CodeStack 2018</copyright>
+    <copyright>Copyright © CodeStack 2019</copyright>
     <tags>MacroFeature SOLIDWORKS</tags>
   </metadata>
 </package>
