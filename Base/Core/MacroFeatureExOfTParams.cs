@@ -16,12 +16,15 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using CodeStack.SwEx.MacroFeature.Data;
+using SolidWorks.Interop.swpublished;
 
 namespace CodeStack.SwEx.MacroFeature
 {
     /// <inheritdoc cref="MacroFeatureEx"/>
     /// <summary>Represents macro feature which stores additional user parameters</summary>
     /// <typeparam name="TParams">Type of class representing parameters data model</typeparam>
+    [ClassInterface(ClassInterfaceType.None)]
+    [ComDefaultInterface(typeof(ISwComFeature))]
     public abstract class MacroFeatureEx<TParams> : MacroFeatureEx
         where TParams : class, new()
     {
