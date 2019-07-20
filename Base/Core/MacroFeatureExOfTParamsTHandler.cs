@@ -9,10 +9,12 @@ using CodeStack.SwEx.MacroFeature.Base;
 using CodeStack.SwEx.MacroFeature.Helpers;
 using SolidWorks.Interop.sldworks;
 using SolidWorks.Interop.swconst;
+using SolidWorks.Interop.swpublished;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 
 namespace CodeStack.SwEx.MacroFeature
@@ -23,6 +25,8 @@ namespace CodeStack.SwEx.MacroFeature
     /// an individual feature as <see cref="MacroFeatureEx"/> behaves as a service and it creates
     /// one instance per application session</summary>
     /// <typeparam name="THandler">Handler of macro feature</typeparam>
+    [ClassInterface(ClassInterfaceType.None)]
+    [ComDefaultInterface(typeof(ISwComFeature))]
     public abstract class MacroFeatureEx<TParams, THandler> : MacroFeatureEx<TParams>
         where THandler : class, IMacroFeatureHandler, new()
         where TParams : class, new()
