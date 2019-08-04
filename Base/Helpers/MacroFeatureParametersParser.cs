@@ -408,6 +408,39 @@ namespace CodeStack.SwEx.MacroFeature.Helpers
                 }
 
                 featData.SetParameters(paramNames, paramTypes, paramValues);
+
+                UpdateParameters(featData, paramNames, paramTypes, paramValues);
+            }
+        }
+
+        /// <summary>
+        /// Parameters are not updated when SetParameters is called from OnRebuild method, updating one by one fixes the issue
+        /// </summary>
+        private void UpdateParameters(IMacroFeatureData featData,
+            string[] paramNames, int[] paramTypes, string[] paramValues)
+        {
+            if (paramNames != null && paramTypes != null && paramValues != null)
+            {
+                for (int i = 0; i < paramNames.Length; i++)
+                {
+                    var paramName = paramNames[i];
+                    var val = paramValues[i];
+
+                    switch ((swMacroFeatureParamType_e)paramTypes[i])
+                    {
+                        case swMacroFeatureParamType_e.swMacroFeatureParamTypeString:
+                            featData.SetStringByName(paramName, val);
+                            break;
+
+                        case swMacroFeatureParamType_e.swMacroFeatureParamTypeInteger:
+                            featData.SetIntegerByName(paramName, int.Parse(val));
+                            break;
+
+                        case swMacroFeatureParamType_e.swMacroFeatureParamTypeDouble:
+                            featData.SetDoubleByName(paramName, double.Parse(val));
+                            break;
+                    }
+                }
             }
         }
 

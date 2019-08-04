@@ -23,6 +23,8 @@ namespace CodeStack.SwEx.MacroFeature.Example
 
         [ParameterDimension(swDimensionType_e.swRadialDimension)]
         public double RefRadDimension { get; set; } = 0.025;
+
+        public long DateTimeStamp { get; set; }
     }
     
     [ComVisible(true)]
@@ -32,8 +34,9 @@ namespace CodeStack.SwEx.MacroFeature.Example
             IFeature feature, DimensionMacroFeatureParams parameters)
         {
             parameters.RefCalcDimension = parameters.RefDimension * 2;
-            var featData = feature.GetDefinition() as IMacroFeatureData;
-            SetParameters(model, feature, featData, parameters);
+            parameters.DateTimeStamp = DateTime.Now.Ticks;
+
+            SetParameters(model, feature, feature.GetDefinition() as IMacroFeatureData, parameters);
             feature.Name = parameters.RefDimension.ToString();
 
             return MacroFeatureRebuildResult.FromStatus(true);
