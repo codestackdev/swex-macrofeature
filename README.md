@@ -1,6 +1,6 @@
 [![Documentation](https://img.shields.io/badge/-Documentation-green.svg)](https://www.codestack.net/labs/solidworks/swex/macro-feature/)
 [![NuGet](https://img.shields.io/nuget/v/CodeStack.SwEx.MacroFeature.svg)](https://www.nuget.org/packages/CodeStack.SwEx.MacroFeature/)
-[![Issues](https://img.shields.io/github/issues/codestack-net-dev/swex-macrofeature.svg)](https://github.com/codestack-net-dev/swex-macrofeature/issues)
+[![Issues](https://img.shields.io/github/issues/codestack-net-dev/swex-macrofeature.svg)](https://github.com/codestackdev/swex-macrofeature/issues)
 
 # SwEx.MacroFeature
 ![SwEx.MacroFeature](https://www.codestack.net/labs/solidworks/swex/macro-feature/logo.png)
