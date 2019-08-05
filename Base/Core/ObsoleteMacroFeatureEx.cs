@@ -1,4 +1,11 @@
-﻿using System;
+﻿//**********************
+//SwEx.MacroFeature - framework for developing macro features in SOLIDWORKS
+//Copyright(C) 2019 www.codestack.net
+//License: https://github.com/codestackdev/swex-macrofeature/blob/master/LICENSE
+//Product URL: https://www.codestack.net/labs/solidworks/swex/macro-feature
+//**********************
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;

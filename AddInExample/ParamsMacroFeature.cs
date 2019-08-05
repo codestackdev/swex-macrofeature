@@ -42,6 +42,8 @@ namespace CodeStack.SwEx.MacroFeature.Example
     {
         public string Param2 { get; set; }
         public int EditDefinitionsCount { get; set; }
+        public DateTime DateTime { get; set; }
+        public decimal Decimal { get; set; }
     }
 
     [ComVisible(true)]
@@ -57,6 +59,8 @@ namespace CodeStack.SwEx.MacroFeature.Example
 
             var featParams = GetParameters(feature, featData, model);
 
+            featParams.DateTime = DateTime.Now;
+            featParams.Decimal = (featParams.Decimal + 1M) * 1.002M;
             app.SendMsgToUser($"{nameof(featParams.Param2)} = {featParams.Param2}; {nameof(featParams.EditDefinitionsCount)} = {featParams.EditDefinitionsCount}");
             featParams.EditDefinitionsCount = featParams.EditDefinitionsCount + 1;
 

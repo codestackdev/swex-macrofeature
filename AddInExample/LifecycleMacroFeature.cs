@@ -29,9 +29,9 @@ namespace CodeStack.SwEx.MacroFeature.Example
             m_App.SendMsgToUser($"{m_Model.GetTitle()}\\{m_Feat.Name} loaded");
         }
 
-        public void Unload()
+        public void Unload(MacroFeatureUnloadReason_e reason)
         {
-            m_App.SendMsgToUser($"{m_Model.GetTitle()}\\{m_Feat.Name} unloaded");
+            m_App.SendMsgToUser($"{m_Model.GetTitle()}\\{m_Feat.Name} unloaded: {reason}");
         }
 
         public void Rebuild()

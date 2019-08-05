@@ -1,11 +1,11 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Topics>
-  <Topic id="4cd362b8-c3db-4b26-9bd7-2f9175eb4856" visible="True" isDefault="true" title="Welcome to the SwEx.MacroFeature">
+  <Topic id="welcome" visible="True" isDefault="true" title="Welcome to the SwEx.MacroFeature">
     <HelpKeywords>
       <HelpKeyword index="K" term="Welcome" />
     </HelpKeywords>
   </Topic>
-  <Topic id="9894d840-be02-403b-b4fd-1f75dbde2021" visible="True" isExpanded="true" title="Version History">
+  <Topic id="version-history" visible="True" isExpanded="true" title="Version History">
     <HelpKeywords>
       <HelpKeyword index="K" term="version, history" />
     </HelpKeywords>
@@ -20,6 +20,7 @@
     <Topic id="v0-4-1" visible="True" title="Version 0.4.1" />
     <Topic id="v0-4-2" visible="True" title="Version 0.4.2" />
     <Topic id="v0-4-3" visible="True" title="Version 0.4.3" />
-    <Topic id="v0-4-4" visible="True" isSelected="true" title="Version 0.4.4" />
+    <Topic id="v0-4-4" visible="True" title="Version 0.4.4" />
+    <Topic id="v0-5-0" visible="True" isSelected="true" title="Version 0.5.0" />
   </Topic>
 </Topics>

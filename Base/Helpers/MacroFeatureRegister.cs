@@ -1,7 +1,7 @@
 ﻿//**********************
 //SwEx.MacroFeature - framework for developing macro features in SOLIDWORKS
-//Copyright(C) 2018 www.codestack.net
-//License: https://github.com/codestack-net-dev/swex-macrofeature/blob/master/LICENSE
+//Copyright(C) 2019 www.codestack.net
+//License: https://github.com/codestackdev/swex-macrofeature/blob/master/LICENSE
 //Product URL: https://www.codestack.net/labs/solidworks/swex/macro-feature
 //**********************
 
@@ -9,12 +9,9 @@ using CodeStack.SwEx.Common.Base;
 using CodeStack.SwEx.Common.Diagnostics;
 using CodeStack.SwEx.MacroFeature.Base;
 using SolidWorks.Interop.sldworks;
-using SolidWorks.Interop.swconst;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
-using System.Text;
 
 namespace CodeStack.SwEx.MacroFeature.Helpers
 {
@@ -35,7 +32,7 @@ namespace CodeStack.SwEx.MacroFeature.Helpers
         private readonly ILogger m_Logger;
 
         internal MacroFeatureRegister(string baseName, IModule parentModule)
-        {           
+        {
             m_BaseName = baseName;
             m_Logger = LoggerFactory.Create(parentModule, this.GetType().Name);
 
@@ -58,7 +55,7 @@ namespace CodeStack.SwEx.MacroFeature.Helpers
 
                 var lcm = new MacroFeatureLifecycleManager(model, m_BaseName, m_Logger);
                 lcm.ModelDisposed += OnModelDisposed;
-                lcm.FeatureDisposed += OnFeatureDisposed;
+                lcm.FeatureDeleted += OnFeatureDeleted;
                 m_LifecycleManagers.Add(model, lcm);
             }
 
@@ -76,22 +73,25 @@ namespace CodeStack.SwEx.MacroFeature.Helpers
             return handler;
         }
 
-        private void OnFeatureDisposed(IModelDoc2 model, IFeature feat)
+        private void OnFeatureDeleted(IModelDoc2 model, IFeature feat)
         {
-            DestroyInRegister(model, feat);
+            UnloadFeatureFromRegister(model, feat, MacroFeatureUnloadReason_e.Deleted);
         }
 
         private void OnModelDisposed(IModelDoc2 model)
         {
-            DestroyInRegister(model);
+            UnloadModelFromRegister(model);
         }
 
-        private void DestroyInRegister(IModelDoc2 model)
+        private void UnloadModelFromRegister(IModelDoc2 model)
         {
             MacroFeatureLifecycleManager lcm;
 
             if (m_LifecycleManagers.TryGetValue(model, out lcm))
             {
+                lcm.ModelDisposed -= OnModelDisposed;
+                lcm.FeatureDeleted -= OnFeatureDeleted;
+
                 m_LifecycleManagers.Remove(model);
             }
             else
@@ -105,7 +105,7 @@ namespace CodeStack.SwEx.MacroFeature.Helpers
             {
                 foreach (var handler in modelDict.Values)
                 {
-                    handler.Unload();
+                    handler.Unload(MacroFeatureUnloadReason_e.ModelClosed);
                 }
 
                 m_Register.Remove(model);
@@ -116,7 +116,7 @@ namespace CodeStack.SwEx.MacroFeature.Helpers
             }
         }
 
-        private void DestroyInRegister(IModelDoc2 model, IFeature feat)
+        private void UnloadFeatureFromRegister(IModelDoc2 model, IFeature feat, MacroFeatureUnloadReason_e reason)
         {
             MacroFeatureDictionary modelDict;
 
@@ -126,7 +126,7 @@ namespace CodeStack.SwEx.MacroFeature.Helpers
 
                 if (modelDict.TryGetValue(feat, out handler))
                 {
-                    handler.Unload();
+                    handler.Unload(reason);
 
                     modelDict.Remove(feat);
                 }
@@ -145,7 +145,7 @@ namespace CodeStack.SwEx.MacroFeature.Helpers
         {
             foreach (var model in m_Register.Keys)
             {
-                DestroyInRegister(model);
+                UnloadModelFromRegister(model);
             }
 
             m_Register.Clear();

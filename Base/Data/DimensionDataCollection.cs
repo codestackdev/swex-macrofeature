@@ -1,4 +1,11 @@
-﻿using CodeStack.SwEx.MacroFeature.Data;
+﻿//**********************
+//SwEx.MacroFeature - framework for developing macro features in SOLIDWORKS
+//Copyright(C) 2019 www.codestack.net
+//License: https://github.com/codestackdev/swex-macrofeature/blob/master/LICENSE
+//Product URL: https://www.codestack.net/labs/solidworks/swex/macro-feature
+//**********************
+
+using CodeStack.SwEx.MacroFeature.Data;
 using SolidWorks.Interop.sldworks;
 using System;
 using System.Collections.Generic;

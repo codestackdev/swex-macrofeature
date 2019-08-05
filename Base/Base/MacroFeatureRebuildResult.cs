@@ -1,7 +1,7 @@
 ﻿//**********************
 //SwEx.MacroFeature - framework for developing macro features in SOLIDWORKS
-//Copyright(C) 2018 www.codestack.net
-//License: https://github.com/codestack-net-dev/swex-macrofeature/blob/master/LICENSE
+//Copyright(C) 2019 www.codestack.net
+//License: https://github.com/codestackdev/swex-macrofeature/blob/master/LICENSE
 //Product URL: https://www.codestack.net/labs/solidworks/swex/macro-feature
 //**********************
 
@@ -26,6 +26,7 @@ namespace CodeStack.SwEx.MacroFeature.Base
         /// <param name="body">Body to return</param>
         /// <returns>Result</returns>
         /// <remarks>Use this result if you need to macro feature to generate a single body (solid or surface)</remarks>
+        [Obsolete ("Obsolete method, use another overload"), Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
         public static MacroFeatureRebuildResult FromBody(IBody2 body)
         {
             return new MacroFeatureRebuildBodyResult(body);
@@ -48,13 +49,6 @@ namespace CodeStack.SwEx.MacroFeature.Base
         public static MacroFeatureRebuildResult FromBodies(IBody2[] bodies, IMacroFeatureData featData, bool updateEntityIds = true)
         {
             return new MacroFeatureRebuildBodyResult(featData, updateEntityIds, bodies);
-        }
-
-        [Obsolete("Deprecated. Use FromBodies method instead")]
-        [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
-        public static MacroFeatureRebuildResult FromPattern(IBody2[] bodiesPattern)
-        {
-            return new MacroFeatureRebuildPatternResult(bodiesPattern);
         }
 
         /// <summary>
