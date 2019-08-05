@@ -1,7 +1,7 @@
 ﻿//**********************
 //SwEx.MacroFeature - framework for developing macro features in SOLIDWORKS
-//Copyright(C) 2018 www.codestack.net
-//License: https://github.com/codestack-net-dev/swex-macrofeature/blob/master/LICENSE
+//Copyright(C) 2019 www.codestack.net
+//License: https://github.com/codestackdev/swex-macrofeature/blob/master/LICENSE
 //Product URL: https://www.codestack.net/labs/solidworks/swex/macro-feature
 //**********************
 
@@ -90,13 +90,10 @@ namespace CodeStack.SwEx.MacroFeature
         protected virtual void OnSetDimensions(ISldWorks app, IModelDoc2 model, IFeature feature,
             MacroFeatureRebuildResult rebuildResult, DimensionDataCollection dims, TParams parameters)
         {
-#pragma warning disable CS0618
             OnSetDimensions(app, model, feature, dims, parameters);
-#pragma warning restore CS0618
         }
 
-        [Obsolete("Deprecated. Use another overload of this method")]
-        [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
+        /// <inheritdoc cref="OnSetDimensions(ISldWorks, IModelDoc2, IFeature, MacroFeatureRebuildResult, DimensionDataCollection, TParams)"/>
         protected virtual void OnSetDimensions(ISldWorks app, IModelDoc2 model, IFeature feature,
             DimensionDataCollection dims, TParams parameters)
         {

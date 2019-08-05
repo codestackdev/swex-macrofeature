@@ -1,0 +1,124 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<topic id="v0-5-0" revisionNumber="1">
+  <developerConceptualDocument xmlns="http://ddue.schemas.microsoft.com/authoring/2003/5" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <introduction>
+      <para>
+        Version 0.5.0 was released on 5 August 2019.
+      </para>
+    </introduction>
+
+    <section>
+      <title>Bug fixes</title>
+      <content>
+
+        <list class="bullet">
+          <listItem>
+            <para>
+              <externalLink>
+                <linkText>Issue 12</linkText>
+                <linkUri>https://github.com/codestack-net-dev/swex-macrofeature/issues/12</linkUri>
+              </externalLink> NullReferenceException in MacroFeatureRebuildResult.FromBody
+            </para>
+          </listItem>
+
+        </list>
+
+      </content>
+    </section>
+
+    <section>
+      <title>Enhancements</title>
+      <content>
+
+        <list class="bullet">
+          <listItem>
+            <para>
+              <externalLink>
+                <linkText>Issue 13</linkText>
+                <linkUri>https://github.com/codestack-net-dev/swex-macrofeature/issues/13</linkUri>
+              </externalLink> Provide a reason for the macro feature handler destroy
+            </para>
+          </listItem>
+          <listItem>
+            <para>
+              <externalLink>
+                <linkText>Issue 14</linkText>
+                <linkUri>https://github.com/codestack-net-dev/swex-macrofeature/issues/14</linkUri>
+              </externalLink> Need to have support for more types in macro feature parameters (DateTime, decimal)
+            </para>
+          </listItem>
+        </list>
+
+      </content>
+    </section>
+
+    <section>
+      <title>Removed members</title>
+      <content>
+
+        <list class="bullet">
+          <listItem>
+            <para>IMacroFeatureHandler.Unload. Replaced with Unload(MacroFeatureUnloadReason_e reason)</para>
+          </listItem>
+          <listItem>
+            <para>
+              CodeStack.SwEx.MacroFeature.Attributes.IconAttribute. Replaced with FeatureIconAttribute
+            </para>
+          </listItem>
+          <listItem>
+            <para>ParameterDimensionAttribute(swDimensionType_e dimType, int dimIndex)</para>
+          </listItem>
+          <listItem>
+            <para>
+              ParameterEditBodyAttribute(int bodyIndex)
+            </para>
+          </listItem>
+          <listItem>
+            <para>ParameterSelectionAttribute(int selIndex)</para>
+          </listItem>
+          <listItem>
+            <para>
+              MacroFeatureRebuildPatternResult
+            </para>
+          </listItem>
+          <listItem>
+            <para>
+              MacroFeatureRebuildResult.FromPattern. Replaced with MacroFeatureRebuildResult.FromBodies
+            </para>
+          </listItem>
+          <listItem>
+            <para>
+              CodeStack.SwEx.MacroFeature.Mocks.DimensionEmpty. Replaced with imensionPlaceholder
+            </para>
+          </listItem>
+          <listItem>
+            <para>CodeStack.SwEx.MacroFeature.Mocks.DisplayDimensionEmpty. Replaced with DisplayDimensionPlaceholder</para>
+          </listItem>
+
+        </list>
+
+      </content>
+    </section>
+
+    <section>
+      <title>Obsolete members</title>
+      <content>
+
+        <list class="bullet">
+          <listItem>
+            <para>
+              MacroFeatureRebuildResult.FromBody(IBody2)
+            </para>
+          </listItem>
+
+        </list>
+
+      </content>
+    </section>
+
+    <relatedTopics>
+      <link xlink:href="9894d840-be02-403b-b4fd-1f75dbde2021" />
+    </relatedTopics>
+
+  </developerConceptualDocument>
+</topic>

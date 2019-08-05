@@ -1,7 +1,7 @@
 ﻿//**********************
 //SwEx.MacroFeature - framework for developing macro features in SOLIDWORKS
-//Copyright(C) 2018 www.codestack.net
-//License: https://github.com/codestack-net-dev/swex-macrofeature/blob/master/LICENSE
+//Copyright(C) 2019 www.codestack.net
+//License: https://github.com/codestackdev/swex-macrofeature/blob/master/LICENSE
 //Product URL: https://www.codestack.net/labs/solidworks/swex/macro-feature
 //**********************
 
@@ -20,8 +20,10 @@ namespace CodeStack.SwEx.MacroFeature.Helpers
 {
     internal class MacroFeatureLifecycleManager
     {
+        private const int S_OK = 0;
+
         internal event Action<IModelDoc2> ModelDisposed;
-        internal event Action<IModelDoc2, IFeature> FeatureDisposed;
+        internal event Action<IModelDoc2, IFeature> FeatureDeleted;
 
         private IModelDoc2 m_Model;
         private readonly string m_MacroFeatBaseName;
@@ -66,7 +68,7 @@ namespace CodeStack.SwEx.MacroFeature.Helpers
                 (m_Model as DrawingDoc).DestroyNotify2 += OnDestroyNotify2;
             }
         }
-
+        
         private int OnDeleteItemNotify(int EntityType, string itemName)
         {
             m_Logger.Log($"Deleting item {itemName} of {EntityType}");
@@ -77,9 +79,10 @@ namespace CodeStack.SwEx.MacroFeature.Helpers
 
                 if (m_UnloadQueue.TryGetValue(itemName, out feat))
                 {
-                    FeatureDisposed?.Invoke(m_Model, feat);
+                    FeatureDeleted?.Invoke(m_Model, feat);
                     m_UnloadQueue.Remove(itemName);
-                    
+
+                    Marshal.ReleaseComObject(feat);
                     feat = null;
                     GC.Collect();
                     GC.Collect();
@@ -87,7 +90,7 @@ namespace CodeStack.SwEx.MacroFeature.Helpers
                 }
             }
 
-            return 0;
+            return S_OK;
         }
 
         private int OnDeleteItemPreNotify(int entityType, string itemName)
@@ -108,7 +111,7 @@ namespace CodeStack.SwEx.MacroFeature.Helpers
                 }
             }
 
-            return 0;
+            return S_OK;
         }
 
         private bool TryGetMacroFeature(int entType, string name, out IFeature macroFeat)

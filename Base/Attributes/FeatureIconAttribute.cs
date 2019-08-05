@@ -1,7 +1,7 @@
 ﻿//**********************
 //SwEx.MacroFeature - framework for developing macro features in SOLIDWORKS
-//Copyright(C) 2018 www.codestack.net
-//License: https://github.com/codestack-net-dev/swex-macrofeature/blob/master/LICENSE
+//Copyright(C) 2019 www.codestack.net
+//License: https://github.com/codestackdev/swex-macrofeature/blob/master/LICENSE
 //Product URL: https://www.codestack.net/labs/solidworks/swex/macro-feature
 //**********************
 
@@ -12,21 +12,6 @@ using System.Drawing;
 
 namespace CodeStack.SwEx.MacroFeature.Attributes
 {
-    [Obsolete("Deprecated. Use FeatureIconAttribute or Common.Attributes.IconAttribute instead")]
-    public class IconAttribute : FeatureIconAttribute
-    {
-        public IconAttribute(Type resType, string resName, string iconFolderName = "")
-            : base(resType, resName, iconFolderName)
-        {
-        }
-
-        public IconAttribute(Type resType, string smallResName, string mediumResName,
-            string largeResName, string iconFolderName = "")
-            : base(resType, smallResName, mediumResName, largeResName, iconFolderName)
-        {
-        }
-    }
-
     /// <summary>
     /// Specifies the icon for macro feature to be displayed in the Feature Manager Tree
     /// </summary>
@@ -56,7 +41,7 @@ namespace CodeStack.SwEx.MacroFeature.Attributes
             IconFolderName = iconFolderName;
         }
 
-        ///<inheritdoc cref="IconAttribute(Type, string, string)"/>
+        ///<inheritdoc cref="FeatureIconAttribute(Type, string, string)"/>
         /// <param name="smallResName">Name of the resource representing the small size icon</param>
         /// <param name="mediumResName">Name of the resource representing the medium size icon</param>
         /// <param name="largeResName">Name of the resource representing the large size icon</param>

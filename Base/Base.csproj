@@ -76,7 +76,6 @@
     <Compile Include="Base\IParametersVersionConverter.cs" />
     <Compile Include="Base\MacroFeatureOutdateState.cs" />
     <Compile Include="Base\MacroFeatureRebuildBodyResult.cs" />
-    <Compile Include="Base\MacroFeatureRebuildPatternResult.cs" />
     <Compile Include="Base\MacroFeatureRebuildResult.cs" />
     <Compile Include="Base\MacroFeatureRebuldStatusResult.cs" />
     <Compile Include="Core\MacroFeatureExOfTParams.cs" />

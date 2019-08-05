@@ -1,7 +1,7 @@
 ﻿//**********************
 //SwEx.MacroFeature - framework for developing macro features in SOLIDWORKS
-//Copyright(C) 2018 www.codestack.net
-//License: https://github.com/codestack-net-dev/swex-macrofeature/blob/master/LICENSE
+//Copyright(C) 2019 www.codestack.net
+//License: https://github.com/codestackdev/swex-macrofeature/blob/master/LICENSE
 //Product URL: https://www.codestack.net/labs/solidworks/swex/macro-feature
 //**********************
 
@@ -11,7 +11,6 @@ using CodeStack.SwEx.MacroFeature.Base;
 using CodeStack.SwEx.MacroFeature.Data;
 using CodeStack.SwEx.MacroFeature.Exceptions;
 using CodeStack.SwEx.MacroFeature.Icons;
-using CodeStack.SwEx.MacroFeature.Mocks;
 using CodeStack.SwEx.MacroFeature.Placeholders;
 using SolidWorks.Interop.sldworks;
 using SolidWorks.Interop.swconst;
@@ -644,39 +643,10 @@ namespace CodeStack.SwEx.MacroFeature.Helpers
             {
                 indices = indValues.Split(',').Select(i => int.Parse(i)).ToArray();
             }
-            else
-            {
-                //throw new ParametersMismatchException("Object parameter (selection, edit body or dimension) indices have note been updated");
-
-                //TODO: remove - legacy
-                #region Legacy - remove
-
-                var selAtt = prp.TryGetAttribute<ParameterSelectionAttribute>();
-                var dimAtt = prp.TryGetAttribute<ParameterDimensionAttribute>();
-                var editBodyAtt = prp.TryGetAttribute<ParameterEditBodyAttribute>();
-#pragma warning disable CS0618
-                if (selAtt != null && selAtt.SelectionIndex != -1)
-                {
-                    indices = new int[] { selAtt.SelectionIndex };
-                }
-                else if (dimAtt != null && dimAtt.DimensionIndex != -1)
-                {
-                    indices = new int[] { dimAtt.DimensionIndex };
-                }
-                else if (editBodyAtt != null && editBodyAtt.BodyIndex != -1)
-                {
-                    indices = new int[] { editBodyAtt.BodyIndex };
-                }
-                else
-                {
-                    throw new ParametersMismatchException("Object parameter (selection, edit body or dimension) indices have note been updated");
-                }
-#pragma warning restore
-                #endregion
-            }
 
             return indices;
         }
+
         private string GetParameterValue(Dictionary<string, string> parameters, string name)
         {
             if (parameters == null)
@@ -798,14 +768,14 @@ namespace CodeStack.SwEx.MacroFeature.Helpers
                 }
                 else
                 {
-                    if (prpType.IsPrimitive || prpType == typeof(string))
+                    if (typeof(IConvertible).IsAssignableFrom(prpType))
                     {
                         dataParamHandler.Invoke(prp);
                     }
                     else
                     {
                         throw new NotSupportedException(
-                            $"{prp.Name} is not supported as the parameter of macro feature. Currently only primitive types and string are supported");
+                            $"{prp.Name} is not supported as the parameter of macro feature. Currently only types implementing IConvertible are supported (e.g. primitive types, string, DateTime, decimal)");
                     }
                 }
             }

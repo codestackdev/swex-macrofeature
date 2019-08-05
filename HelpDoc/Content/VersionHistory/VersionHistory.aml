@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<topic id="9894d840-be02-403b-b4fd-1f75dbde2021" revisionNumber="1">
+<topic id="version-history" revisionNumber="1">
 	<developerConceptualDocument xmlns="http://ddue.schemas.microsoft.com/authoring/2003/5" xmlns:xlink="http://www.w3.org/1999/xlink">
 		<introduction>
 			<para>The topics in this section describe the various changes made to the SwEx.MacroFeature over the
@@ -48,6 +48,11 @@ life of the project.</para>
           <listItem>
             <para>
               <link xlink:href="v0-4-4" />
+            </para>
+          </listItem>
+          <listItem>
+            <para>
+              <link xlink:href="v0-5-0" />
             </para>
           </listItem>
 				</list>

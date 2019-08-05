@@ -2,11 +2,11 @@
 <package >
   <metadata>
     <id>CodeStack.SwEx.MacroFeature</id>
-    <version>0.4.4</version>
+    <version>0.5.0</version>
     <title>Framework for developing custom macro features in SOLIDWORKS</title>
     <authors>CodeStack</authors>
     <owners>CodeStack</owners>
-    <licenseUrl>https://github.com/codestack-net-dev/swex-macrofeature/blob/master/LICENSE</licenseUrl>
+    <licenseUrl>https://github.com/codestackdev/swex-macrofeature/blob/master/LICENSE</licenseUrl>
     <projectUrl>https://www.codestack.net/labs/solidworks/swex/macro-feature</projectUrl>
 	<iconUrl>https://www.codestack.net/labs/solidworks/swex/macro-feature/logo.png</iconUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
@@ -15,4 +15,7 @@
     <copyright>Copyright © CodeStack 2019</copyright>
     <tags>MacroFeature SOLIDWORKS</tags>
   </metadata>
+  <files>
+    <file src="readme.txt" target="" />
+  </files>
 </package>

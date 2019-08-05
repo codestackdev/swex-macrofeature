@@ -1,7 +1,7 @@
 ﻿//**********************
 //SwEx.MacroFeature - framework for developing macro features in SOLIDWORKS
-//Copyright(C) 2018 www.codestack.net
-//License: https://github.com/codestack-net-dev/swex-macrofeature/blob/master/LICENSE
+//Copyright(C) 2019 www.codestack.net
+//License: https://github.com/codestackdev/swex-macrofeature/blob/master/LICENSE
 //Product URL: https://www.codestack.net/labs/solidworks/swex/macro-feature
 //**********************
 
@@ -23,24 +23,5 @@ namespace CodeStack.SwEx.MacroFeature.Attributes
     [AttributeUsage(AttributeTargets.Property)]
     public class ParameterSelectionAttribute : System.Attribute
     {
-        /// <summary>
-        /// Index of the selection in the selection array
-        /// </summary>
-        [Obsolete("This property is deprecated")]
-        internal int SelectionIndex { get; private set; } = -1;
-
-        /// <summary>
-        /// Marks this property as a selection
-        /// </summary>
-        public ParameterSelectionAttribute()
-        {
-        }
-
-        [Obsolete("This constructor is deprecated")]
-        [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
-        public ParameterSelectionAttribute(int selIndex)
-        {
-            SelectionIndex = selIndex;
-        }
     }
 }
