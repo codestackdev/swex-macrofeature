@@ -1,0 +1,29 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<topic id="v0-5-1" revisionNumber="1">
+  <developerConceptualDocument xmlns="http://ddue.schemas.microsoft.com/authoring/2003/5" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <introduction>
+      <para>
+        Version 0.5.1 was released on 8 August 2019.
+      </para>
+    </introduction>
+     
+    <section>
+      <title>Enhancements</title>
+      <content>
+
+        <list class="bullet">
+          <listItem>
+            <para>
+              <externalLink>
+                <linkText>Issue 15</linkText>
+                <linkUri>https://github.com/codestack-net-dev/swex-macrofeature/issues/15</linkUri>
+              </externalLink> Need to add GetParameters and SetParameters method as extension of IMacroFeatureData
+            </para>
+          </listItem>
+        </list>
+
+      </content>
+    </section>
+
+  </developerConceptualDocument>
+</topic>

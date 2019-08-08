@@ -29,13 +29,11 @@ namespace SolidWorks.Interop.sldworks
     public static class FeatureManagerEx
     {
         private static readonly MacroFeatureParametersParser m_ParamsParser;
-        private static readonly IconsConverter m_IconsConverter;
         private static readonly ISldWorks m_App;
 
         static FeatureManagerEx()
         {
             m_ParamsParser = new MacroFeatureParametersParser();
-            m_IconsConverter = new IconsConverter();
             m_App = Context.CurrentApp;
         }
 

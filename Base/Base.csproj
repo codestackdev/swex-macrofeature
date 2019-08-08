@@ -85,6 +85,7 @@
     <Compile Include="Data\DimensionDataCollection.cs" />
     <Compile Include="Exceptions\FutureVersionParametersException.cs" />
     <Compile Include="Exceptions\ParametersMismatchException.cs" />
+    <Compile Include="Extensions\MacroFeatureDataEx.cs" />
     <Compile Include="Extensions\ModelerEx.cs" />
     <Compile Include="Extensions\SldWorksEx.cs" />
     <Compile Include="Helpers\Context.cs" />
