@@ -34,7 +34,9 @@ namespace SolidWorks.Interop.sldworks
             IDisplayDimension[] dispDims;
             IBody2[] bodies;
             MacroFeatureOutdateState_e state;
-            return m_ParamsParser.GetParameters<TParams>(feat, featData, model, out dispDims, out bodies, out state);
+            string[] dispDimParams;
+            return m_ParamsParser.GetParameters<TParams>(feat, featData, model,
+                out dispDims, out dispDimParams, out bodies, out state);
         }
 
         /// <summary>

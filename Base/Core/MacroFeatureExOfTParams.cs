@@ -47,15 +47,19 @@ namespace CodeStack.SwEx.MacroFeature
 
             IDisplayDimension[] dispDims;
             IBody2[] editBodies;
-            var parameters = GetParameters(feature, featDef, model, out dispDims, out editBodies);
 
+            MacroFeatureOutdateState_e state;
+            string[] dispDimParams;
+            var parameters = m_ParamsParser.GetParameters<TParams>(feature, featDef, model, out dispDims,
+                out dispDimParams, out editBodies, out state);
+            
             Logger.Log("Rebuilding. Generating bodies");
 
             var rebuildRes = OnRebuild(app, model, feature, parameters);
 
             Logger.Log("Rebuilding. Updating dimensions");
 
-            UpdateDimensions(app, model, feature, rebuildRes, dispDims, parameters);
+            UpdateDimensions(app, model, feature, rebuildRes, dispDims, dispDimParams, parameters);
 
             Logger.Log("Rebuilding. Releasing dimensions");
 
@@ -141,7 +145,9 @@ namespace CodeStack.SwEx.MacroFeature
             out IDisplayDimension[] dispDims, out IBody2[] editBodies)
         {
             MacroFeatureOutdateState_e state;
-            return m_ParamsParser.GetParameters<TParams>(feat, featData, model, out dispDims, out editBodies, out state);
+            string[] dispDimParams;
+            return m_ParamsParser.GetParameters<TParams>(feat, featData, model, out dispDims,
+                out dispDimParams, out editBodies, out state);
         }
 
         [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
@@ -155,9 +161,9 @@ namespace CodeStack.SwEx.MacroFeature
         }
 
         private void UpdateDimensions(ISldWorks app, IModelDoc2 model, IFeature feature,
-            MacroFeatureRebuildResult rebuildRes, IDisplayDimension[] dispDims, TParams parameters)
+            MacroFeatureRebuildResult rebuildRes, IDisplayDimension[] dispDims, string[] dispDimParams, TParams parameters)
         {
-            using (var dimsColl = new DimensionDataCollection(dispDims))
+            using (var dimsColl = new DimensionDataCollection(dispDims, dispDimParams))
             {
                 if (dimsColl.Any())
                 {

@@ -78,14 +78,15 @@ namespace CodeStack.SwEx.MacroFeature.Helpers
         }
 
         internal TParams GetParameters<TParams>(IFeature feat, IMacroFeatureData featData, IModelDoc2 model,
-                    out IDisplayDimension[] dispDims, out IBody2[] editBodies, out MacroFeatureOutdateState_e state)
+                    out IDisplayDimension[] dispDims, out string[] dispDimParams, out IBody2[] editBodies, out MacroFeatureOutdateState_e state)
             where TParams : class, new()
         {
-            return GetParameters(feat, featData, model, typeof(TParams), out dispDims, out editBodies, out state) as TParams;
+            return GetParameters(feat, featData, model, typeof(TParams), out dispDims,
+                out dispDimParams, out editBodies, out state) as TParams;
         }
 
         internal object GetParameters(IFeature feat, IMacroFeatureData featData, IModelDoc2 model, Type paramsType,
-            out IDisplayDimension[] dispDims, out IBody2[] editBodies, out MacroFeatureOutdateState_e state)
+            out IDisplayDimension[] dispDims, out string[] dispDimParams, out IBody2[] editBodies, out MacroFeatureOutdateState_e state)
         {
             object retParamNames = null;
             object retParamValues = null;
@@ -100,7 +101,8 @@ namespace CodeStack.SwEx.MacroFeature.Helpers
             featData.GetSelections3(out retSelObj, out selObjType, out selMarks, out selDrViews, out compXforms);
 
             IDisplayDimension[] localDispDims = null;
-            
+            var dispDimParamsMap = new SortedDictionary<int, string>();
+
             try
             {
                 var dispDimsObj = featData.GetDisplayDimensions() as object[];
@@ -196,6 +198,8 @@ namespace CodeStack.SwEx.MacroFeature.Helpers
                                     new string[] { featData.CurrentConfiguration.Name }) as double[])[0];
                                 prp.SetValue(resParams, val, null);
                             }
+
+                            dispDimParamsMap.Add(dimInd, prp.Name);
                         }
                         else
                         {
@@ -217,6 +221,8 @@ namespace CodeStack.SwEx.MacroFeature.Helpers
                 dispDims = localDispDims;
                 editBodies = localEditBodies;
                 state = GetState(featData, localDispDims);
+                dispDimParams = dispDimParamsMap.Values.ToArray();
+
                 return resParams;
             }
             catch

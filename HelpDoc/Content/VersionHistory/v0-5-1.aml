@@ -16,7 +16,7 @@
             <para>
               <externalLink>
                 <linkText>Issue 15</linkText>
-                <linkUri>https://github.com/codestack-net-dev/swex-macrofeature/issues/15</linkUri>
+                <linkUri>https://github.com/codestackdev/swex-macrofeature/issues/15</linkUri>
               </externalLink> Need to add GetParameters and SetParameters method as extension of IMacroFeatureData
             </para>
           </listItem>

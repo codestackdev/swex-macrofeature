@@ -15,7 +15,7 @@
             <para>
               <externalLink>
                 <linkText>Issue 11</linkText>
-                <linkUri>https://github.com/codestack-net-dev/swex-macrofeature/issues/11</linkUri>
+                <linkUri>https://github.com/codestackdev/swex-macrofeature/issues/11</linkUri>
               </externalLink> SetParameters doesn't update parameters within OnRebuild
             </para>
           </listItem>
