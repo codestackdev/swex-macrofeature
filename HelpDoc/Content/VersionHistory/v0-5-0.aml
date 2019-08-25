@@ -16,7 +16,7 @@
             <para>
               <externalLink>
                 <linkText>Issue 12</linkText>
-                <linkUri>https://github.com/codestack-net-dev/swex-macrofeature/issues/12</linkUri>
+                <linkUri>https://github.com/codestackdev/swex-macrofeature/issues/12</linkUri>
               </externalLink> NullReferenceException in MacroFeatureRebuildResult.FromBody
             </para>
           </listItem>
@@ -35,7 +35,7 @@
             <para>
               <externalLink>
                 <linkText>Issue 13</linkText>
-                <linkUri>https://github.com/codestack-net-dev/swex-macrofeature/issues/13</linkUri>
+                <linkUri>https://github.com/codestackdev/swex-macrofeature/issues/13</linkUri>
               </externalLink> Provide a reason for the macro feature handler destroy
             </para>
           </listItem>
@@ -43,7 +43,7 @@
             <para>
               <externalLink>
                 <linkText>Issue 14</linkText>
-                <linkUri>https://github.com/codestack-net-dev/swex-macrofeature/issues/14</linkUri>
+                <linkUri>https://github.com/codestackdev/swex-macrofeature/issues/14</linkUri>
               </externalLink> Need to have support for more types in macro feature parameters (DateTime, decimal)
             </para>
           </listItem>

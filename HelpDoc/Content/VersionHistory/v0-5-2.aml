@@ -1,0 +1,55 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<topic id="v0-5-2" revisionNumber="1">
+  <developerConceptualDocument xmlns="http://ddue.schemas.microsoft.com/authoring/2003/5" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <introduction>
+      <para>
+        Version 0.5.2 was released on 25 August 2019.
+      </para>
+    </introduction>
+     
+    <section>
+      <title>Enhancements</title>
+      <content>
+
+        <list class="bullet">
+          <listItem>
+            <para>
+              <externalLink>
+                <linkText>Issue 4</linkText>
+                <linkUri>https://github.com/codestackdev/swex-macrofeature/issues/4</linkUri>
+              </externalLink> Add name of property to DimensionData class so dimension could be tracked
+            </para>
+          </listItem>
+          <listItem>
+            <para>
+              <externalLink>
+                <linkText>Issue 16</linkText>
+                <linkUri>https://github.com/codestackdev/swex-macrofeature/issues/16</linkUri>
+              </externalLink> Need to add or return the X axis reference in ModelerEx::CreateBox method
+            </para>
+          </listItem>
+        </list>
+
+      </content>
+    </section>
+
+    <section>
+      <title>Bug Fixes</title>
+      <content>
+
+        <list class="bullet">
+          <listItem>
+            <para>
+              <externalLink>
+                <linkText>Issue 4 (Common)</linkText>
+                <linkUri>https://github.com/codestackdev/swex-common/issues/4</linkUri>
+              </externalLink> Protect transparency key when generating icons with IconConverter utility
+            </para>
+          </listItem>
+        </list>
+
+      </content>
+    </section>
+
+  </developerConceptualDocument>
+</topic>

@@ -118,6 +118,7 @@
     <None Include="Content\VersionHistory\v0-4-4.aml" />
     <None Include="Content\VersionHistory\v0-5-0.aml" />
     <None Include="Content\VersionHistory\v0-5-1.aml" />
+    <None Include="Content\VersionHistory\v0-5-2.aml" />
     <None Include="Content\VersionHistory\VersionHistory.aml" />
     <None Include="Content\Welcome.aml" />
     <None Include="Content\VersionHistory\v0-2-0.aml" />
