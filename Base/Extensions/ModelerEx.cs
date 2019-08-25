@@ -29,24 +29,13 @@ namespace SolidWorks.Interop.sldworks
             m_MathUtils = Context.CurrentApp.IGetMathUtility();
         }
 
-        /// <summary>
-        /// Creates the box solid geometry
-        /// </summary>
-        /// <param name="modeler">Pointer to modeler</param>
-        /// <param name="center">Center coordinate of the box in meters</param>
-        /// <param name="dir">Direction of the box</param>
-        /// <param name="width">Width of the box in meters</param>
-        /// <param name="length">Length of the box in meters</param>
-        /// <param name="height">Height of the box in meters. This is a dimension parallel to <paramref name="dir"/></param>
-        /// <returns>Pointer to a temp body</returns>
-        /// <remarks>Use this method instead of built-in <see href="http://help.solidworks.com/2016/english/api/sldworksapi/SolidWorks.Interop.sldworks~SolidWorks.Interop.sldworks.IModeler~CreateBodyFromBox3.html">IModeler::CreateBodyFromBox</see>
-        /// If you need to preserve entity ids as the body generated using the built-in method won't allow to set user id,
-        /// which means any reference geometry generated in relation to box entities will become dangling upon rebuild</remarks>
-        public static IBody2 CreateBox(this IModeler modeler, Point center, Vector dir,
+        /// <inheritdoc cref="CreateBox(IModeler, Point, Vector, double, double, double)"/>
+        /// <param name="refDir">Input or output direction of ref axis which corresponds to X. Specify null to auto calculate</param>
+        public static IBody2 CreateBox(this IModeler modeler, Point center, Vector dir, ref Vector refDir,
             double width, double length, double height)
         {
             IMathVector refVec;
-            var surf = CreatePlanarSurface(modeler, center, dir, out refVec);
+            var surf = CreatePlanarSurface(modeler, center, dir, ref refDir, out refVec);
 
             var xVec = new Vector(refVec.ArrayData as double[]);
             var yVec = xVec.Cross(dir);
@@ -88,6 +77,27 @@ namespace SolidWorks.Interop.sldworks
         }
 
         /// <summary>
+        /// Creates the box solid geometry
+        /// </summary>
+        /// <param name="modeler">Pointer to modeler</param>
+        /// <param name="center">Center coordinate of the box in meters</param>
+        /// <param name="dir">Direction of the box</param>
+        /// <param name="width">Width of the box in meters</param>
+        /// <param name="length">Length of the box in meters</param>
+        /// <param name="height">Height of the box in meters. This is a dimension parallel to <paramref name="dir"/></param>
+        /// <returns>Pointer to a temp body</returns>
+        /// <remarks>Use this method instead of built-in <see href="http://help.solidworks.com/2016/english/api/sldworksapi/SolidWorks.Interop.sldworks~SolidWorks.Interop.sldworks.IModeler~CreateBodyFromBox3.html">IModeler::CreateBodyFromBox</see>
+        /// If you need to preserve entity ids as the body generated using the built-in method won't allow to set user id,
+        /// which means any reference geometry generated in relation to box entities will become dangling upon rebuild</remarks>
+        public static IBody2 CreateBox(this IModeler modeler, Point center, Vector dir,
+            double width, double length, double height)
+        {
+            Vector refDir = null;
+
+            return CreateBox(modeler, center, dir, ref refDir, width, length, height);
+        }
+
+        /// <summary>
         /// Creates the cylindrical body
         /// </summary>
         /// <param name="modeler">Pointer to modeler</param>
@@ -102,7 +112,9 @@ namespace SolidWorks.Interop.sldworks
         public static IBody2 CreateCylinder(this IModeler modeler, Point center, Vector axis, double radius, double height)
         {
             IMathVector refVec;
-            var surf = CreatePlanarSurface(modeler, center, axis, out refVec);
+            Vector refDir = null;
+
+            var surf = CreatePlanarSurface(modeler, center, axis, ref refDir, out refVec);
 
             var radDir = new Vector(refVec.ArrayData as double[]);
             var refPt = center.Move(radDir, radius);
@@ -122,13 +134,23 @@ namespace SolidWorks.Interop.sldworks
             return modeler.CreateExtrudedBody(sheetBody, dir, height) as IBody2;
         }
 
-        private static ISurface CreatePlanarSurface(IModeler modeler, Point center, Vector dir, out IMathVector refVec)
+        private static ISurface CreatePlanarSurface(IModeler modeler, Point center, Vector dir, 
+            ref Vector refDir, out IMathVector refVec)
         {
-            var transform = GetTransformBetweenVectors(new Vector(0, 0, 1), dir, center);
+            if (refDir == null)
+            {
+                var transform = GetTransformBetweenVectors(new Vector(0, 0, 1), dir, center);
 
-            refVec = (m_MathUtils.CreateVector(
-                new double[] { 1, 0, 0 }) as IMathVector)
-                .MultiplyTransform(transform) as IMathVector;
+                refVec = (m_MathUtils.CreateVector(
+                    new double[] { 1, 0, 0 }) as IMathVector)
+                    .MultiplyTransform(transform) as IMathVector;
+
+                refDir = new Vector(refVec.ArrayData as double[]);
+            }
+            else
+            {
+                refVec = m_MathUtils.CreateVector(refDir.ToArray()) as IMathVector;
+            }
             
             return modeler.CreatePlanarSurface2(center.ToArray(), dir.ToArray(), refVec.ArrayData) as ISurface;
         }

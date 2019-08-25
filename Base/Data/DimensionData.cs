@@ -33,10 +33,17 @@ namespace CodeStack.SwEx.MacroFeature.Data
         /// </summary>
         public IDimension Dimension { get; private set; }
 
-        internal DimensionData(IDisplayDimension dispDim)
+
+        /// <summary>
+        /// Name of the parameter which corresponds to this dimension
+        /// </summary>
+        public string Name { get; private set; }
+
+        internal DimensionData(IDisplayDimension dispDim, string name)
         {
             DisplayDimension = dispDim;
             Dimension = dispDim.GetDimension2(0);
+            Name = name;
         }
 
         /// <summary>

@@ -21,15 +21,30 @@ namespace CodeStack.SwEx.MacroFeature.Data
     /// </summary>
     public class DimensionDataCollection : ReadOnlyCollection<DimensionData>, IDisposable
     {
-        internal DimensionDataCollection(IDisplayDimension[] dispDims)
+        internal DimensionDataCollection(IDisplayDimension[] dispDims, string[] dispDimParams)
             : base(new List<DimensionData>())
         {
-            if (dispDims != null)
+            if (dispDims != null && dispDimParams != null)
             {
-                for (int i = 0; i < dispDims.Length; i++)
+                if (dispDims.Length == dispDimParams.Length)
                 {
-                    this.Items.Add(new DimensionData(dispDims[i] as IDisplayDimension));
+                    for (int i = 0; i < dispDims.Length; i++)
+                    {
+                        this.Items.Add(new DimensionData(dispDims[i] as IDisplayDimension, dispDimParams[i]));
+                    }
                 }
+                else
+                {
+                    throw new IndexOutOfRangeException("Dimensions and parameters lentgth do not match");
+                }
+            }
+        }
+
+        public DimensionData this[string name]
+        {
+            get
+            {
+                return this.First(d => d.Name == name);
             }
         }
 

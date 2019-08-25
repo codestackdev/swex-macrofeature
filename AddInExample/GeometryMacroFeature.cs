@@ -24,15 +24,7 @@ namespace CodeStack.SwEx.MacroFeature.Example
         protected override MacroFeatureRebuildResult OnRebuild(ISldWorks app, IModelDoc2 model,
             IFeature feature)
         {
-            //var body = app.IGetModeler().CreateBodyFromBox3(
-            //    new double[]
-            //    {
-            //        0, 0, 0,
-            //        0, 1, 0,
-            //        0.1, 0.1, 0.1
-            //    });
-
-            var body = app.IGetModeler().CreateBox(new Point(0.1, 0.2, 0.3), new Vector(1, 1, 1), 0.1, 0.2, 0.3);
+            var body = app.IGetModeler().CreateBox(new Point(0.1, 0.2, 0.3), new Vector(0, 0, 1), 0.1, 0.2, 0.3);
 
             return MacroFeatureRebuildResult.FromBody(body, feature.GetDefinition() as IMacroFeatureData);
         }

@@ -113,7 +113,9 @@ namespace SolidWorks.Interop.sldworks
                 IDisplayDimension[] dispDims;
                 IBody2[] editBodies;
                 MacroFeatureOutdateState_e state;
-                parameters = m_ParamsParser.GetParameters(feat, featData, model, paramsType, out dispDims, out editBodies, out state);
+                string[] dispDimParams;
+                parameters = m_ParamsParser.GetParameters(feat, featData, model, paramsType, 
+                    out dispDims, out dispDimParams, out editBodies, out state);
                 MacroFeatureParametersParser.ReleaseDisplayDimensions(dispDims);
             }
 
