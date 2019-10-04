@@ -45,7 +45,7 @@ namespace CodeStack.SwEx.MacroFeature.Base
         /// Create the result from array of bodies
         /// </summary>
         /// <param name="bodies">Array of temp bodies</param>
-        /// <remarks>Use this method if it is required to have multiple bodies in the macro feature</remarks>
+        /// <remarks>Use this method if it is required to have multiple bodies in the macro feature. This feature is only supported in SOLIDWORKS 2013 SP5 or newer (revision 21.5)</remarks>
         public static MacroFeatureRebuildResult FromBodies(IBody2[] bodies, IMacroFeatureData featData, bool updateEntityIds = true)
         {
             return new MacroFeatureRebuildBodyResult(featData, updateEntityIds, bodies);

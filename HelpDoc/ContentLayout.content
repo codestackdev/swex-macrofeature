@@ -20,9 +20,10 @@
     <Topic id="v0-4-1" visible="True" title="Version 0.4.1" />
     <Topic id="v0-4-2" visible="True" title="Version 0.4.2" />
     <Topic id="v0-4-3" visible="True" title="Version 0.4.3" />
-    <Topic id="v0-4-4" visible="True" isSelected="true" title="Version 0.4.4" />
+    <Topic id="v0-4-4" visible="True" title="Version 0.4.4" />
     <Topic id="v0-5-0" visible="True" title="Version 0.5.0" />
     <Topic id="v0-5-1" visible="True" title="Version 0.5.1" />
     <Topic id="v0-5-2" visible="True" title="Version 0.5.2" />
+    <Topic id="v0-5-3" visible="True" isSelected="true" title="Version 0.5.3" />
   </Topic>
 </Topics>

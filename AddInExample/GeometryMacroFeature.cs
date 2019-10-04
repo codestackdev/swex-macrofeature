@@ -13,6 +13,7 @@ namespace CodeStack.SwEx.MacroFeature.Example
 {
     [ComVisible(true)]
     [Icon(typeof(Resources), nameof(Resources.codestack))]
+    [Title("Geometry")]
     public class GeometryMacroFeature : MacroFeatureEx
     {
         protected override bool OnEditDefinition(ISldWorks app, IModelDoc2 model, IFeature feature)

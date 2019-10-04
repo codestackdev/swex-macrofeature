@@ -5,6 +5,8 @@
 //Product URL: https://www.codestack.net/labs/solidworks/swex/macro-feature
 //**********************
 
+using CodeStack.SwEx.Common.Enums;
+using CodeStack.SwEx.MacroFeature.Helpers;
 using SolidWorks.Interop.sldworks;
 using System;
 using System.Collections.Generic;
@@ -46,7 +48,10 @@ namespace CodeStack.SwEx.MacroFeature.Base
         internal protected MacroFeatureRebuildBodyResult(IMacroFeatureData featData,
             bool updateEntityIds, params IBody2[] bodies) : base(GetBodyResult(bodies))
         {
-            featData.EnableMultiBodyConsume = true;
+            if (Context.CurrentApp.IsVersionNewerOrEqual(SwVersion_e.Sw2013, 5))
+            {
+                featData.EnableMultiBodyConsume = true;
+            }
 
             if (updateEntityIds)
             {

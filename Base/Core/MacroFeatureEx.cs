@@ -11,22 +11,19 @@ using CodeStack.SwEx.Common.Icons;
 using CodeStack.SwEx.Common.Reflection;
 using CodeStack.SwEx.MacroFeature.Attributes;
 using CodeStack.SwEx.MacroFeature.Base;
-using CodeStack.SwEx.MacroFeature.Helpers;
 using CodeStack.SwEx.MacroFeature.Icons;
 using CodeStack.SwEx.MacroFeature.Properties;
 using SolidWorks.Interop.sldworks;
 using SolidWorks.Interop.swconst;
 using SolidWorks.Interop.swpublished;
 using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
-using System.Text;
 using CodeStack.SwEx.Common.Diagnostics;
+using CodeStack.SwEx.Common.Enums;
 
 namespace CodeStack.SwEx.MacroFeature
 {
@@ -174,7 +171,7 @@ namespace CodeStack.SwEx.MacroFeature
         {
             LogOperation("Regenerating feature", app as ISldWorks, modelDoc as IModelDoc2, feature as IFeature);
 
-            SetProvider(feature);
+            SetProvider(app as ISldWorks, feature as IFeature);
 
             var res = OnRebuild(app as ISldWorks, modelDoc as IModelDoc2, feature as IFeature);
 
@@ -194,15 +191,18 @@ namespace CodeStack.SwEx.MacroFeature
             return OnUpdateState(app as ISldWorks, modelDoc as IModelDoc2, feature as IFeature);
         }
 
-        private void SetProvider(object feature)
+        private void SetProvider(ISldWorks app, IFeature feature)
         {
             if (!string.IsNullOrEmpty(m_Provider))
             {
-                var featData = (feature as IFeature).GetDefinition() as IMacroFeatureData;
-
-                if (featData.Provider != m_Provider)
+                if (app.IsVersionNewerOrEqual(SwVersion_e.Sw2016))
                 {
-                    featData.Provider = m_Provider;
+                    var featData = feature.GetDefinition() as IMacroFeatureData;
+
+                    if (featData.Provider != m_Provider)
+                    {
+                        featData.Provider = m_Provider;
+                    }
                 }
             }
         }
