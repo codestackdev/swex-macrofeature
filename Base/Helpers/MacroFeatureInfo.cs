@@ -9,6 +9,7 @@ using CodeStack.SwEx.Common.Reflection;
 using CodeStack.SwEx.MacroFeature.Attributes;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -37,6 +38,14 @@ namespace CodeStack.SwEx.MacroFeature.Helpers
             {
                 baseName = a.BaseName;
             });
+
+            if (string.IsNullOrEmpty(baseName))
+            {
+                macroFeatType.TryGetAttribute<DisplayNameAttribute>(a =>
+                {
+                    baseName = a.DisplayName;
+                });
+            }
 
             if (string.IsNullOrEmpty(baseName))
             {
